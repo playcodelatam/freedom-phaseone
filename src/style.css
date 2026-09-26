@@ -1,13 +1,14 @@
 :root {
-  --sky-top: #6fbeff;
-  --sky-bot: #eaf6ff;
-  --ink: #1b2a52;
-  --accent: #ff8e72;
-  --accent-2: #5fc6f0;
-  --good: #46e39b;
-  --bad: #ff6b6b;
-  --card: #ffffff;
-  --shadow: 0 10px 30px rgba(27, 42, 82, 0.25);
+  --sky-top: #060913;
+  --sky-bot: #0c1427;
+  --ink: #e2e8f0;
+  --accent: #00f5ff;
+  --accent-2: #00ff88;
+  --good: #00ff88;
+  --bad: #ff3366;
+  --card: rgba(13, 21, 38, 0.9);
+  --card-border: rgba(0, 245, 255, 0.35);
+  --shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
 }
 
 * {
@@ -21,7 +22,7 @@ body {
   padding: 0;
   height: 100%;
   overflow: hidden;
-  font-family: "Baloo 2", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+  font-family: "JetBrains Mono", "Chakra Petch", monospace, sans-serif;
   color: var(--ink);
   background: linear-gradient(180deg, var(--sky-top), var(--sky-bot));
   user-select: none;
@@ -45,7 +46,7 @@ body {
   inset: 0;
   pointer-events: none;
   z-index: 20;
-  background: radial-gradient(ellipse at center, transparent 58%, rgba(20, 30, 60, 0.13) 100%);
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(4, 8, 16, 0.65) 100%);
 }
 
 .hidden {
@@ -77,65 +78,78 @@ body {
 }
 
 #lobby {
-  background: linear-gradient(180deg, #6ec6ff, #a0e9ff);
+  background: radial-gradient(circle at center, #0f1d3d 0%, #050811 80%);
 }
 
 .lobby-card,
 .quiz-card,
 .win-card {
   background: var(--card);
-  border-radius: 28px;
-  box-shadow: inset 0 0 0 3px #fff, 0 8px 0 rgba(27, 42, 82, 0.18), var(--shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 20px;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 0 25px rgba(0, 245, 255, 0.15), var(--shadow);
   padding: 28px 26px;
   width: min(440px, 92vw);
   text-align: center;
+  color: var(--ink);
 }
 
 .logo {
-  font-size: clamp(40px, 11vw, 64px);
+  font-family: "Orbitron", sans-serif;
+  font-size: clamp(34px, 9vw, 52px);
   margin: 0;
-  font-weight: 800;
-  letter-spacing: -1px;
-  background: linear-gradient(90deg, #ff8e72, #5fc6f0, #5fd69a);
+  font-weight: 900;
+  letter-spacing: 1px;
+  background: linear-gradient(90deg, #00f5ff, #00ff88, #38bdf8);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 15px rgba(0, 245, 255, 0.4));
 }
 
 .tagline {
-  margin: 4px 0 22px;
-  font-size: 18px;
-  color: #5b6a99;
+  margin: 8px 0 22px;
+  font-size: 15px;
+  color: #94a3b8;
   font-weight: 600;
+  letter-spacing: 0.5px;
 }
 
 .field-label {
   display: block;
   text-align: left;
   font-weight: 700;
+  font-size: 14px;
   margin: 0 0 6px 6px;
-  color: #5b6a99;
+  color: #38bdf8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .text-input {
   width: 100%;
-  font-size: 20px;
+  font-size: 18px;
   padding: 14px 16px;
-  border: 3px solid #dbe6ff;
-  border-radius: 16px;
+  background: #090e1a;
+  border: 2px solid #1e293b;
+  border-radius: 12px;
   outline: none;
   font-family: inherit;
   font-weight: 700;
-  color: var(--ink);
-  transition: border-color 0.15s;
+  color: #f1f5f9;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 .text-input:focus {
-  border-color: var(--accent-2);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(0, 245, 255, 0.35);
 }
 .text-input.code {
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   text-align: center;
+  color: var(--accent-2);
 }
 
 .lobby-buttons {
@@ -148,31 +162,38 @@ body {
 .btn {
   font-family: inherit;
   font-weight: 800;
-  font-size: 18px;
-  border: none;
-  border-radius: 16px;
+  font-size: 17px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
   padding: 14px 20px;
-  background: #e8eefc;
-  color: var(--ink);
+  background: #1e293b;
+  color: #f8fafc;
   cursor: pointer;
-  transition: transform 0.08s, filter 0.15s;
-  box-shadow: 0 5px 0 rgba(29, 43, 83, 0.15);
+  transition: transform 0.08s, filter 0.15s, box-shadow 0.15s, border-color 0.15s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+.btn:hover {
+  border-color: var(--accent);
 }
 .btn:active {
-  transform: translateY(3px);
-  box-shadow: 0 2px 0 rgba(29, 43, 83, 0.15);
+  transform: translateY(2px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 .btn-big {
-  font-size: 22px;
+  font-size: 19px;
   padding: 16px;
 }
 .btn-accent {
-  background: var(--accent);
-  color: #fff;
-  box-shadow: 0 5px 0 #c95a37;
+  background: linear-gradient(135deg, #00bcd4, #00f5ff);
+  color: #030712;
+  border: none;
+  box-shadow: 0 0 15px rgba(0, 245, 255, 0.35);
+}
+.btn-accent:hover {
+  box-shadow: 0 0 22px rgba(0, 245, 255, 0.6);
 }
 .btn-accent:active {
-  box-shadow: 0 2px 0 #c95a37;
+  box-shadow: 0 0 8px rgba(0, 245, 255, 0.4);
 }
 
 .join-row {
@@ -475,22 +496,23 @@ body.in-3d.touch .jump-btn { display: flex; }
   box-shadow: 0 3px 0 #c95a37, inset 0 3px 6px rgba(255, 255, 255, 0.4);
 }
 
-/* contextual action button (sit / splash / wish / pet / high-five) */
+/* contextual action button (query agent / sync / etc) */
 .action-btn {
-  padding: 12px 20px;
-  border-radius: 16px;
-  border: 4px solid #fff;
-  background: var(--accent-2);
-  color: #fff;
+  padding: 12px 22px;
+  border-radius: 12px;
+  border: 1px solid var(--accent);
+  background: rgba(13, 21, 38, 0.95);
+  color: #00f5ff;
   font-family: inherit;
-  font-weight: 900;
-  font-size: 18px;
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: 0.5px;
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: 0 6px 0 #3aa5cf, var(--shadow);
+  box-shadow: 0 0 15px rgba(0, 245, 255, 0.4), var(--shadow);
   animation: bob 1.4s ease-in-out infinite;
 }
-.action-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #3aa5cf; }
+.action-btn:active { transform: translateY(2px); box-shadow: 0 0 8px rgba(0, 245, 255, 0.4); }
 
 /* radial emote wheel - JS sets left/top to the emote button's live position so
    it lines up in both layouts; options fan up + sideways from that point. */
@@ -540,27 +562,34 @@ body.in-3d.touch .jump-btn { display: flex; }
    the notch inset on landscape phones */
 .hud-top { padding-right: max(50px, calc(env(safe-area-inset-right) + 50px)); }
 
-/* ---------- flash message ---------- */
+/* ---------- flash message / agent transmission ---------- */
 .flash {
   position: absolute;
-  top: 30%;
+  top: 25%;
   left: 50%;
   translate: -50% -50%;
-  font-size: clamp(26px, 7vw, 44px);
-  font-weight: 900;
-  color: #fff;
-  text-shadow: 2px 0 0 #14203f, -2px 0 0 #14203f, 0 2px 0 #14203f, 0 -2px 0 #14203f,
-    0 4px 0 rgba(20, 32, 63, 0.4);
+  font-size: clamp(18px, 4.5vw, 26px);
+  font-weight: 700;
+  color: #f8fafc;
+  background: rgba(8, 15, 30, 0.94);
+  border: 1px solid var(--accent);
+  border-radius: 16px;
+  padding: 16px 28px;
+  box-shadow: 0 0 25px rgba(0, 245, 255, 0.4), var(--shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   opacity: 0;
   transition: opacity 0.25s, scale 0.25s;
-  scale: 0.7;
+  scale: 0.85;
   text-align: center;
   pointer-events: none;
-  white-space: nowrap;
+  max-width: min(550px, 92vw);
+  line-height: 1.4;
+  z-index: 100;
 }
 .flash.show {
   opacity: 1;
-  scale: 1.05;
+  scale: 1;
   animation: flashpop 0.3s ease-out;
 }
 @keyframes flashpop {
@@ -1295,21 +1324,24 @@ body.in-3d.touch .jump-btn { display: flex; }
   translate: -50% 0;
   z-index: 56;
   font-family: inherit;
-  font-weight: 900;
-  font-size: clamp(18px, 5vw, 24px);
-  color: #fff;
-  background: var(--accent);
-  border: 4px solid #fff;
-  border-radius: 18px;
-  padding: 14px 26px;
+  font-weight: 800;
+  font-size: clamp(17px, 4.5vw, 22px);
+  color: #030712;
+  background: linear-gradient(135deg, #00f5ff, #00ff88);
+  border: 1px solid #ffffff;
+  border-radius: 14px;
+  padding: 14px 28px;
   cursor: pointer;
-  box-shadow: 0 7px 0 #c95a37, var(--shadow);
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 25px rgba(0, 245, 255, 0.6), var(--shadow);
   animation: bob 1.4s ease-in-out infinite;
 }
-.explore-prompt:active { transform: translateY(3px); }
+.explore-prompt:active { transform: translateY(2px); }
 .explore-prompt.soon {
-  background: #8b9bbf;
-  box-shadow: 0 7px 0 #5b6a99, var(--shadow);
+  background: #1e293b;
+  color: #94a3b8;
+  border-color: #334155;
+  box-shadow: var(--shadow);
   animation: none;
 }
 
