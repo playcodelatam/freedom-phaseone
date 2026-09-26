@@ -85,7 +85,7 @@ export function startExplore(onEnter, opts = {}) {
   // ---------- World Geometry & Colliders ----------
   const colliders = [];
   const aabb = (cx, cy, cz, sx, sy, sz) => ({
-    min: { x: cx - sx / 2, y: cy - sy / 2, z: cz - sy / 2 },
+    min: { x: cx - sx / 2, y: cy - sy / 2, z: cz - sz / 2 },
     max: { x: cx + sx / 2, y: cy + sy / 2, z: cz + sz / 2 },
   });
 
@@ -97,6 +97,7 @@ export function startExplore(onEnter, opts = {}) {
   ground.receiveShadow = true;
   scene.add(ground);
   colliders.push(aabb(0, -0.5, 0, (R + 4) * 2, 1, (R + 4) * 2));
+  if (import.meta.env.DEV) window.__bbColliders = colliders;
 
   // Central Hub Plaza (Brighter titanium finish with specular reflection)
   const plaza = new THREE.Mesh(new THREE.CircleGeometry(11.5, 40), metalMat(0x223a5e, { roughness: 0.22, metalness: 0.75 }));
