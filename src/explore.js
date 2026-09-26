@@ -1,7 +1,7 @@
 // The 3D Explore World - AI Laboratory & Datacenter Hub for ExploitGym.
-// A high-tech AI research facility featuring server racks, holographic displays,
-// a central Quantum Core, and autonomous 3D AI Agents patrolling the grounds.
-// Walk to each sector terminal / portal to enter training activities.
+// A luminous high-tech facility featuring animated server racks with blinking LEDs,
+// real-time animated holographic terminal screens, central Quantum Core, and
+// autonomous 3D AI Agents patrolling the grounds.
 
 import * as THREE from "three";
 import { createPlayer, updatePlayer, respawn } from "./player.js";
@@ -10,7 +10,7 @@ import { createControls, isTouchDevice } from "./controls.js";
 import { createFollowCamera, intentToWorld } from "./camera.js";
 import { createEmotes } from "./emotes.js";
 import { createInteractions } from "./interactions.js";
-import { toonMat, roundedGeo, markBloom } from "./gfx.js";
+import { toonMat, metalMat, techMat, roundedGeo, markBloom } from "./gfx.js";
 import { createPostFX } from "./postfx.js";
 import { sfx } from "./audio.js";
 import { createNet, MULTIPLAYER_AVAILABLE } from "./net.js";
@@ -53,47 +53,53 @@ export function startExplore(onEnter, opts = {}) {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.NeutralToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 1.15;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   root.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x050a16, 45, 150);
+  // Lighter, illuminated atmosphere
+  scene.fog = new THREE.Fog(0x1a3354, 55, 190);
   scene.add(makeSky());
 
-  // High-tech Cyberpunk Lighting
-  scene.add(new THREE.HemisphereLight(0x00f5ff, 0x1e1035, 0.75));
-  scene.add(new THREE.AmbientLight(0x0f1c3f, 0.35));
-  const sun = new THREE.DirectionalLight(0x67e8f9, 1.3);
+  // Luminous Architectural Lighting (Bright & High-Tech)
+  scene.add(new THREE.HemisphereLight(0xe2f1ff, 0x1e2e47, 1.25));
+  scene.add(new THREE.AmbientLight(0x7da4c7, 0.55));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.7);
   sun.castShadow = true;
-  sun.position.set(20, 36, 14);
+  sun.position.set(24, 40, 18);
   sun.shadow.mapSize.set(HIGH_END ? 2048 : 1024, HIGH_END ? 2048 : 1024);
   sun.shadow.camera.near = 1;
-  sun.shadow.camera.far = 90;
-  sun.shadow.camera.left = sun.shadow.camera.bottom = -40;
-  sun.shadow.camera.right = sun.shadow.camera.top = 40;
+  sun.shadow.camera.far = 95;
+  sun.shadow.camera.left = sun.shadow.camera.bottom = -45;
+  sun.shadow.camera.right = sun.shadow.camera.top = 45;
   sun.shadow.bias = -0.0004;
   sun.shadow.normalBias = 0.02;
   scene.add(sun, sun.target);
 
+  // Secondary soft cyan accent light
+  const fillLight = new THREE.DirectionalLight(0x00f5ff, 0.6);
+  fillLight.position.set(-20, 25, -15);
+  scene.add(fillLight);
+
   // ---------- World Geometry & Colliders ----------
   const colliders = [];
   const aabb = (cx, cy, cz, sx, sy, sz) => ({
-    min: { x: cx - sx / 2, y: cy - sy / 2, z: cz - sz / 2 },
+    min: { x: cx - sx / 2, y: cy - sy / 2, z: cz - sy / 2 },
     max: { x: cx + sx / 2, y: cy + sy / 2, z: cz + sz / 2 },
   });
 
   const R = 30; // Lab campus radius
 
-  // Main high-tech laboratory floor
-  const ground = new THREE.Mesh(new THREE.CircleGeometry(R + 4, 48), toonMat(0x080e1c));
+  // Polished metallic architectural floor
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(R + 4, 48), metalMat(0x16253d, { roughness: 0.35, metalness: 0.65 }));
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   scene.add(ground);
   colliders.push(aabb(0, -0.5, 0, (R + 4) * 2, 1, (R + 4) * 2));
 
-  // Central Hub Plaza (Metallic Grid Platform)
-  const plaza = new THREE.Mesh(new THREE.CircleGeometry(11.5, 40), toonMat(0x111c33));
+  // Central Hub Plaza (Brighter titanium finish with specular reflection)
+  const plaza = new THREE.Mesh(new THREE.CircleGeometry(11.5, 40), metalMat(0x223a5e, { roughness: 0.22, metalness: 0.75 }));
   plaza.rotation.x = -Math.PI / 2;
   plaza.position.y = 0.02;
   plaza.receiveShadow = true;
@@ -104,29 +110,29 @@ export function startExplore(onEnter, opts = {}) {
   floorRing1.rotation.x = Math.PI / 2; floorRing1.position.y = 0.04; markBloom(floorRing1);
   const floorRing2 = new THREE.Mesh(new THREE.TorusGeometry(5.5, 0.08, 8, 40), new THREE.MeshBasicMaterial({ color: 0x00ff88 }));
   floorRing2.rotation.x = Math.PI / 2; floorRing2.position.y = 0.04; markBloom(floorRing2);
-  const floorRing3 = new THREE.Mesh(new THREE.TorusGeometry(17.8, 0.08, 8, 48), new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.6 }));
+  const floorRing3 = new THREE.Mesh(new THREE.TorusGeometry(17.8, 0.08, 8, 48), new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.7 }));
   floorRing3.rotation.x = Math.PI / 2; floorRing3.position.y = 0.03; markBloom(floorRing3);
   scene.add(floorRing1, floorRing2, floorRing3);
 
   // Outer Perimeter Laser Forcefield
-  const laserPerimeter = new THREE.Mesh(new THREE.TorusGeometry(R + 1, 0.15, 12, 60), new THREE.MeshBasicMaterial({ color: 0x00f5ff }));
+  const laserPerimeter = new THREE.Mesh(new THREE.TorusGeometry(R + 1, 0.16, 12, 60), new THREE.MeshBasicMaterial({ color: 0x00f5ff }));
   laserPerimeter.rotation.x = Math.PI / 2; laserPerimeter.position.y = 0.8; markBloom(laserPerimeter);
   scene.add(laserPerimeter);
 
-  // Perimeter security beacons
+  // Perimeter security pylons
   for (let i = 0; i < 24; i++) {
     const a = (i / 24) * Math.PI * 2;
     const px = Math.cos(a) * (R + 1), pz = Math.sin(a) * (R + 1);
-    const pPost = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, 1.6, 8), toonMat(0x1e293b));
+    const pPost = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 1.6, 8), metalMat(0x283b54));
     pPost.position.set(px, 0.8, pz);
-    const pCap = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00f5ff }));
+    const pCap = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00f5ff }));
     pCap.position.set(px, 1.65, pz); markBloom(pCap);
     scene.add(pPost, pCap);
   }
 
-  // ---------- Central AI Quantum Reactor Core (Replaces fountain) ----------
+  // ---------- Central AI Quantum Reactor Core ----------
   const reactor = new THREE.Group();
-  const rBase = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 3.2, 0.8, 24), toonMat(0x131d33));
+  const rBase = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 3.2, 0.8, 24), metalMat(0x192a42, { roughness: 0.3, metalness: 0.8 }));
   rBase.position.y = 0.4; rBase.castShadow = true; rBase.receiveShadow = true;
   reactor.add(rBase);
 
@@ -154,31 +160,51 @@ export function startExplore(onEnter, opts = {}) {
   scene.add(reactor);
   colliders.push(aabb(0, 1.5, 0, 5.8, 3, 5.8));
 
-  // ---------- Datacenter Server Racks (Replaces trees) ----------
+  // ---------- ANIMATED DATACENTER SERVERS (Blinking Real-time LEDs) ----------
+  const serverLedCanvas = document.createElement("canvas");
+  serverLedCanvas.width = 64; serverLedCanvas.height = 256;
+  const slCtx = serverLedCanvas.getContext("2d");
+  const serverLedTex = new THREE.CanvasTexture(serverLedCanvas);
+  serverLedTex.colorSpace = THREE.SRGBColorSpace;
+
+  function updateServerLeds(elapsed) {
+    slCtx.fillStyle = "#030814";
+    slCtx.fillRect(0, 0, 64, 256);
+    for (let row = 0; row < 16; row++) {
+      const y = 14 + row * 15;
+      slCtx.fillStyle = "#0d1b30";
+      slCtx.fillRect(4, y - 2, 56, 12);
+
+      // Flashing activity LED 1 (Data TX/RX - green)
+      const b1 = Math.sin(elapsed * 16 + row * 2.3) > -0.2;
+      slCtx.fillStyle = b1 ? "#00ff88" : "#043820";
+      slCtx.fillRect(8, y + 2, 10, 4);
+
+      // Flashing compute LED 2 (Bus traffic - cyan)
+      const b2 = Math.sin(elapsed * 10 + row * 3.7) > 0.1;
+      slCtx.fillStyle = b2 ? "#00f5ff" : "#082a3d";
+      slCtx.fillRect(26, y + 2, 10, 4);
+
+      // Flashing status LED 3 (Amber/Red)
+      const b3 = Math.sin(elapsed * 6 + row * 1.5) > 0.4;
+      slCtx.fillStyle = b3 ? (row % 4 === 0 ? "#ff3366" : "#ffb700") : "#2d1604";
+      slCtx.fillRect(44, y + 2, 10, 4);
+    }
+    serverLedTex.needsUpdate = true;
+  }
+
   function createServerRack(x, z, rot = 0) {
     const g = new THREE.Group();
-    const rack = new THREE.Mesh(roundedGeo(1.6, 3.8, 1.0, 0.08, 1), toonMat(0x0f172a));
+    // Metal chassis
+    const rack = new THREE.Mesh(roundedGeo(1.6, 3.8, 1.0, 0.08, 1), metalMat(0x132034, { metalness: 0.8, roughness: 0.3 }));
     rack.position.y = 1.9; rack.castShadow = true; g.add(rack);
 
-    const glass = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 3.4), new THREE.MeshBasicMaterial({ color: 0x072b42, transparent: true, opacity: 0.8 }));
+    // Front tinted glass panel
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 3.4), new THREE.MeshBasicMaterial({ color: 0x0e2f4a, transparent: true, opacity: 0.75 }));
     glass.position.set(0, 1.9, 0.52); g.add(glass);
 
-    const ledCanvas = document.createElement("canvas");
-    ledCanvas.width = 64; ledCanvas.height = 256;
-    const lctx = ledCanvas.getContext("2d");
-    lctx.fillStyle = "#020617"; lctx.fillRect(0, 0, 64, 256);
-    for (let row = 0; row < 16; row++) {
-      const y = 16 + row * 14;
-      lctx.fillStyle = (row % 3 === 0) ? "#00ff88" : (row % 3 === 1) ? "#00f5ff" : "#ffb700";
-      lctx.fillRect(8, y, 10, 4);
-      lctx.fillStyle = (row % 2 === 0) ? "#00ff88" : "#38bdf8";
-      lctx.fillRect(26, y, 10, 4);
-      lctx.fillStyle = (row % 5 === 0) ? "#ff3366" : "#00ff88";
-      lctx.fillRect(44, y, 10, 4);
-    }
-    const ledTex = new THREE.CanvasTexture(ledCanvas);
-    ledTex.colorSpace = THREE.SRGBColorSpace;
-    const ledMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 3.2), new THREE.MeshBasicMaterial({ map: ledTex }));
+    // Animated LED plane
+    const ledMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 3.2), new THREE.MeshBasicMaterial({ map: serverLedTex }));
     ledMesh.position.set(0, 1.9, 0.53); markBloom(ledMesh); g.add(ledMesh);
 
     g.position.set(x, 0, z); g.rotation.y = rot;
@@ -186,77 +212,148 @@ export function startExplore(onEnter, opts = {}) {
     colliders.push(aabb(x, 1.9, z, 1.6, 3.8, 1.0));
   }
 
-  // Scatter server clusters around the outer plaza
+  // Clusters of server racks around the perimeter
   for (let i = 0; i < 12; i++) {
     const a = (i / 12) * Math.PI * 2 + 0.25;
     const rr = 22 + (i % 2) * 3;
     createServerRack(Math.cos(a) * rr, Math.sin(a) * rr, -a + Math.PI / 2);
   }
 
-  // ---------- Holographic Display Screens (Replaces pool & playground) ----------
-  function createHoloScreen(x, z, rot, title, lines) {
-    const g = new THREE.Group();
-    const scCanvas = document.createElement("canvas");
-    scCanvas.width = 512; scCanvas.height = 256;
-    const ctx = scCanvas.getContext("2d");
+  // ---------- ANIMATED HOLOGRAPHIC SCREENS (Real-time Live Canvas) ----------
+  // Screen 1: Real-time Terminal Log / Exploit Traffic Stream
+  const sc1Canvas = document.createElement("canvas");
+  sc1Canvas.width = 512; sc1Canvas.height = 256;
+  const sc1Ctx = sc1Canvas.getContext("2d");
+  const sc1Tex = new THREE.CanvasTexture(sc1Canvas);
+  sc1Tex.colorSpace = THREE.SRGBColorSpace;
 
-    ctx.fillStyle = "rgba(4, 10, 24, 0.95)";
-    ctx.fillRect(0, 0, 512, 256);
-    ctx.fillStyle = "#00f5ff";
-    ctx.font = "bold 22px 'JetBrains Mono', monospace";
-    ctx.fillText(`// AI KERNEL [${title}]`, 24, 38);
+  const logPool = [
+    "[ETH0] RX: 104.21.5.12 -> TLSv1.3 ESTABLISHED",
+    "[SANDBOX] Exploit probe detected on port 8443",
+    "[MODEL_CORE] Forward pass: batch_size=64 seq_len=4096",
+    "[AGENT_01] Recon complete: 0 unpatched vulnerabilities",
+    "[BUFFER_CHECK] Stack canary intact at 0x7ffd9b8",
+    "[INFERENCE] Token generation latency: 12.4ms",
+    "[FIREWALL] Dropped 14 malformed SYN packets",
+    "[KERNEL] Memory allocation pool: 128GB VRAM OK",
+    "[CTF_ENGINE] Flag verification key active",
+    "[ROUTER] BGP route refreshed: AS65001 optimal",
+  ];
+  let logLines = logPool.slice(0, 7);
+  let lastLogPush = 0;
 
-    ctx.strokeStyle = "rgba(0, 245, 255, 0.35)";
-    ctx.lineWidth = 1;
-    ctx.strokeRect(20, 52, 472, 184);
+  function updateScreen1(elapsed) {
+    if (elapsed - lastLogPush > 0.85) {
+      lastLogPush = elapsed;
+      logLines.shift();
+      const nextLog = logPool[Math.floor(Math.random() * logPool.length)];
+      const ts = (elapsed % 60).toFixed(2).padStart(5, "0");
+      logLines.push(`[${ts}s] ${nextLog}`);
+    }
 
-    ctx.font = "16px 'JetBrains Mono', monospace";
-    lines.forEach((l, idx) => {
-      ctx.fillStyle = l.color || "#e2e8f0";
-      ctx.fillText(l.text, 36, 86 + idx * 30);
+    sc1Ctx.fillStyle = "rgba(6, 14, 30, 0.95)";
+    sc1Ctx.fillRect(0, 0, 512, 256);
+
+    sc1Ctx.fillStyle = "#00f5ff";
+    sc1Ctx.font = "bold 20px 'Orbitron', monospace";
+    sc1Ctx.fillText("// TERMINAL: LIVE TRAFFIC STREAM", 22, 36);
+
+    sc1Ctx.strokeStyle = "rgba(0, 245, 255, 0.4)";
+    sc1Ctx.lineWidth = 2;
+    sc1Ctx.strokeRect(16, 48, 480, 192);
+
+    sc1Ctx.font = "14px 'JetBrains Mono', monospace";
+    logLines.forEach((l, idx) => {
+      sc1Ctx.fillStyle = idx === logLines.length - 1 ? "#00ff88" : "#94a3b8";
+      sc1Ctx.fillText(l, 30, 78 + idx * 24);
     });
+    sc1Tex.needsUpdate = true;
+  }
 
-    const tex = new THREE.CanvasTexture(scCanvas);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    const scrMesh = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 2.6), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
+  // Screen 2: Real-time Neural Telemetry & Oscilloscope Waveform
+  const sc2Canvas = document.createElement("canvas");
+  sc2Canvas.width = 512; sc2Canvas.height = 256;
+  const sc2Ctx = sc2Canvas.getContext("2d");
+  const sc2Tex = new THREE.CanvasTexture(sc2Canvas);
+  sc2Tex.colorSpace = THREE.SRGBColorSpace;
+
+  function updateScreen2(elapsed) {
+    sc2Ctx.fillStyle = "rgba(6, 14, 30, 0.95)";
+    sc2Ctx.fillRect(0, 0, 512, 256);
+
+    sc2Ctx.fillStyle = "#38bdf8";
+    sc2Ctx.font = "bold 20px 'Orbitron', monospace";
+    sc2Ctx.fillText("// NEURAL TELEMETRY & LOSS OSCILLOSCOPE", 22, 36);
+
+    sc2Ctx.strokeStyle = "rgba(56, 189, 248, 0.4)";
+    sc2Ctx.lineWidth = 2;
+    sc2Ctx.strokeRect(16, 48, 480, 192);
+
+    // Oscilloscope grid
+    sc2Ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    sc2Ctx.lineWidth = 1;
+    for (let x = 30; x < 490; x += 40) {
+      sc2Ctx.beginPath(); sc2Ctx.moveTo(x, 60); sc2Ctx.lineTo(x, 190); sc2Ctx.stroke();
+    }
+    for (let y = 70; y < 190; y += 30) {
+      sc2Ctx.beginPath(); sc2Ctx.moveTo(30, y); sc2Ctx.lineTo(480, y); sc2Ctx.stroke();
+    }
+
+    // Dynamic wave animation
+    sc2Ctx.strokeStyle = "#00ff88";
+    sc2Ctx.lineWidth = 3;
+    sc2Ctx.beginPath();
+    for (let px = 0; px <= 440; px += 4) {
+      const xNorm = px / 440;
+      const wave = Math.sin(xNorm * 14 - elapsed * 5) * 28 + Math.cos(xNorm * 7 + elapsed * 3) * 12;
+      const py = 125 + wave;
+      if (px === 0) sc2Ctx.moveTo(30 + px, py);
+      else sc2Ctx.lineTo(30 + px, py);
+    }
+    sc2Ctx.stroke();
+
+    // Stats bar
+    const lossVal = (0.0012 + Math.sin(elapsed * 2) * 0.0003).toFixed(5);
+    const gpuTemp = Math.round(68 + Math.sin(elapsed * 0.5) * 4);
+    sc2Ctx.font = "bold 15px 'JetBrains Mono', monospace";
+    sc2Ctx.fillStyle = "#00f5ff";
+    sc2Ctx.fillText(`LOSS: ${lossVal}`, 30, 222);
+    sc2Ctx.fillStyle = "#ffb700";
+    sc2Ctx.fillText(`GPU TEMP: ${gpuTemp}°C`, 210, 222);
+    sc2Ctx.fillStyle = "#00ff88";
+    sc2Ctx.fillText(`AGENTS: 6 ONLINE`, 370, 222);
+
+    sc2Tex.needsUpdate = true;
+  }
+
+  // Create Holo Screen Models
+  function mountScreen(x, z, rot, mapTex) {
+    const g = new THREE.Group();
+    const scrMesh = new THREE.Mesh(new THREE.PlaneGeometry(5.4, 2.7), new THREE.MeshBasicMaterial({ map: mapTex, side: THREE.DoubleSide }));
     scrMesh.position.y = 3.2; markBloom(scrMesh); g.add(scrMesh);
 
-    const post1 = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 2.0, 8), toonMat(0x1e293b));
-    post1.position.set(-1.8, 1.0, 0); post1.castShadow = true;
-    const post2 = post1.clone(); post2.position.set(1.8, 1.0, 0);
+    const post1 = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 2.0, 8), metalMat(0x283b54));
+    post1.position.set(-1.9, 1.0, 0); post1.castShadow = true;
+    const post2 = post1.clone(); post2.position.set(1.9, 1.0, 0);
     g.add(post1, post2);
 
     g.position.set(x, 0, z); g.rotation.y = rot;
     scene.add(g);
-    colliders.push(aabb(x, 2, z, 5.2, 3.8, 0.8));
+    colliders.push(aabb(x, 2, z, 5.4, 3.8, 0.8));
     return g;
   }
 
-  // Two massive AI dashboard screens in the campus
-  createHoloScreen(15, 15, -Math.PI / 4, "MODEL_METRICS", [
-    { text: "EPOCH: 1,420 // LOSS: 0.0012", color: "#00ff88" },
-    { text: "INFERENCE SPEED: 142 tokens/sec", color: "#38bdf8" },
-    { text: "ACTIVE NEURAL WEIGHTS: 70B", color: "#e2e8f0" },
-    { text: "SANDBOX AGENTS: 6 ONLINE", color: "#00f5ff" },
-    { text: "EXPLOIT SIMULATION: READY", color: "#ffb700" },
-  ]);
+  mountScreen(15, 15, -Math.PI / 4, sc1Tex);
+  mountScreen(-15, 15, Math.PI / 4, sc2Tex);
 
-  createHoloScreen(-15, 15, Math.PI / 4, "THREAT_INTELLIGENCE", [
-    { text: "FIREWALL INTEGRITY: 99.4%", color: "#00ff88" },
-    { text: "PORT 8080: ACTIVE RECON", color: "#f59e0b" },
-    { text: "BUFFER OVERFLOW SIM: READY", color: "#ff3366" },
-    { text: "ZERO-DAY EMULATION: ARMED", color: "#38bdf8" },
-    { text: "SYSTEM STATUS: SECURE", color: "#00f5ff" },
-  ]);
-
-  // ---------- Workstation Terminals (Replaces benches) ----------
+  // ---------- Workstation Terminals ----------
   const workstationSpots = [];
   function createWorkstation(x, z, rot) {
     const g = new THREE.Group();
-    const desk = new THREE.Mesh(roundedGeo(2.2, 0.15, 0.9, 0.06, 1), toonMat(0x1e293b));
+    const desk = new THREE.Mesh(roundedGeo(2.2, 0.15, 0.9, 0.06, 1), metalMat(0x1a2b42));
     desk.position.y = 0.9; desk.castShadow = true; g.add(desk);
 
-    const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.9, 8), toonMat(0x0f172a));
+    const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.9, 8), metalMat(0x0f1a29));
     leg1.position.set(-0.9, 0.45, 0); const leg2 = leg1.clone(); leg2.position.set(0.9, 0.45, 0);
     g.add(leg1, leg2);
 
@@ -273,7 +370,7 @@ export function startExplore(onEnter, opts = {}) {
     createWorkstation(Math.cos(a) * 8.5, Math.sin(a) * 8.5, -a);
   }
 
-  // ---------- Floating Ambient Data Nodes (Replaces yellow stars) ----------
+  // ---------- Floating Ambient Data Nodes ----------
   const dataNodeGeo = new THREE.IcosahedronGeometry(0.35, 0);
   const dataNodes = [];
   const nodeColors = [0x00f5ff, 0x00ff88, 0x38bdf8, 0xa855f7];
@@ -286,7 +383,7 @@ export function startExplore(onEnter, opts = {}) {
     scene.add(s); dataNodes.push(s);
   }
 
-  // ---------- 3D Autonomous AI Agents (Replaces animal cutouts) ----------
+  // ---------- 3D Autonomous AI Agents ----------
   const npcs = [];
   AGENTS_DATA.forEach((agent, i) => {
     const g = new THREE.Group();
@@ -294,7 +391,7 @@ export function startExplore(onEnter, opts = {}) {
     // Drone Capsule Body
     const bodyGeo = new THREE.SphereGeometry(0.7, 16, 16);
     bodyGeo.scale(1, 0.85, 1);
-    const bodyMat = toonMat(0x131d33);
+    const bodyMat = metalMat(0x192d47, { metalness: 0.8, roughness: 0.25 });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     body.castShadow = true;
     g.add(body);
@@ -317,7 +414,7 @@ export function startExplore(onEnter, opts = {}) {
 
     // Bottom Thruster Glow
     const thrusterGeo = new THREE.ConeGeometry(0.25, 0.5, 10);
-    const thrusterMat = new THREE.MeshBasicMaterial({ color: agent.color, transparent: true, opacity: 0.7 });
+    const thrusterMat = new THREE.MeshBasicMaterial({ color: agent.color, transparent: true, opacity: 0.75 });
     const thruster = new THREE.Mesh(thrusterGeo, thrusterMat);
     thruster.rotation.x = Math.PI; thruster.position.y = -0.7;
     markBloom(thruster);
@@ -359,32 +456,27 @@ export function startExplore(onEnter, opts = {}) {
     group.rotation.y = facing;
     scene.add(group);
 
-    // High-tech terminal pedestal
-    const base = new THREE.Mesh(roundedGeo(6, 0.6, 2.5, 0.2, 2), toonMat(0x0f172a));
+    const base = new THREE.Mesh(roundedGeo(6, 0.6, 2.5, 0.2, 2), metalMat(0x192b42));
     base.position.y = 0.3; base.castShadow = true; base.receiveShadow = true;
     group.add(base);
     colliders.push(aabb(bx, 1.5, bz, 5.5, 3, 2));
 
-    // Gateway pillar arches
-    const pLeft = new THREE.Mesh(roundedGeo(0.5, 4.2, 0.5, 0.08, 1), toonMat(0x1e293b));
+    const pLeft = new THREE.Mesh(roundedGeo(0.5, 4.2, 0.5, 0.08, 1), metalMat(0x273d5c));
     pLeft.position.set(-2.5, 2.1, 0); pLeft.castShadow = true;
     const pRight = pLeft.clone(); pRight.position.x = 2.5;
-    const pTop = new THREE.Mesh(roundedGeo(5.5, 0.5, 0.6, 0.08, 1), toonMat(0x1e293b));
+    const pTop = new THREE.Mesh(roundedGeo(5.5, 0.5, 0.6, 0.08, 1), metalMat(0x273d5c));
     pTop.position.set(0, 4.2, 0);
     group.add(pLeft, pRight, pTop);
 
-    // Sector Holographic Gate Frame
     const hFrame = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 3.8), new THREE.MeshBasicMaterial({ color: z.color, transparent: true, opacity: 0.18, side: THREE.DoubleSide }));
     hFrame.position.set(0, 2.1, 0);
     markBloom(hFrame);
     group.add(hFrame);
 
-    // Floating sign with emoji + sector name
     const sign = makeSign(z.emoji + " " + z.name, z.desc);
     sign.position.set(0, 5.2, 0);
     group.add(sign);
 
-    // Glowing portal pad on floor
     const padPos = new THREE.Vector3(bx * 0.74, 0.05, bz * 0.74);
     const pad = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 0.12, 24), new THREE.MeshBasicMaterial({ color: z.color }));
     pad.position.copy(padPos); pad.position.y = 0.06;
@@ -555,7 +647,6 @@ export function startExplore(onEnter, opts = {}) {
     if (peer) spawnBurst({ x: (player.pos.x + peer.pos.x) / 2, y: 1.8, z: (player.pos.z + peer.pos.z) / 2 }, "⚡", 5, 0.6, 2.0);
   }
 
-  // Static interaction spots: Quantum Reactor, Workstation Desks
   interactions.setSpots([
     { key: "core", pos: { x: 0, z: 0 }, range: 3.8, icon: "⚡", label: "Sync Core", act: syncCore },
     ...workstationSpots.map((ws, i) => ({
@@ -563,7 +654,6 @@ export function startExplore(onEnter, opts = {}) {
     })),
   ]);
 
-  // Dynamic interaction spots: Wandering 3D AI Agents + Nearby Teammates
   interactions.setDynamic(() => {
     const out = npcs.map((n, i) => ({
       key: `agent${i}`,
@@ -613,12 +703,17 @@ export function startExplore(onEnter, opts = {}) {
     interactions.update(player.pos);
     updateBursts(dt);
 
+    // Update Live Animated Screens & Server LEDs every frame
+    updateServerLeds(elapsed);
+    updateScreen1(elapsed);
+    updateScreen2(elapsed);
+
     // Animate local avatar & follow camera
     avatar.root.position.set(player.pos.x, player.pos.y + 0.15, player.pos.z);
     avatar.root.rotation.y = player.facing;
     avatar.update(emotes.current() || player.anim, dt, camera.cam);
     camera.follow(player.pos, dt, { facing: player.facing, moving });
-    sun.position.set(player.pos.x + 18, 36, player.pos.z + 12);
+    sun.position.set(player.pos.x + 20, 38, player.pos.z + 14);
     sun.target.position.set(player.pos.x, 0, player.pos.z);
 
     // Animate Central Quantum Reactor Core
@@ -701,9 +796,9 @@ function makeSign(title, desc = "") {
   canvas.width = 512; canvas.height = 110;
   const ctx = canvas.getContext("2d");
 
-  ctx.fillStyle = "rgba(8, 16, 34, 0.92)";
+  ctx.fillStyle = "rgba(14, 28, 54, 0.92)";
   roundRect(ctx, 6, 8, 500, 94, 18); ctx.fill();
-  ctx.strokeStyle = "rgba(0, 245, 255, 0.55)";
+  ctx.strokeStyle = "rgba(0, 245, 255, 0.65)";
   ctx.lineWidth = 3;
   roundRect(ctx, 6, 8, 500, 94, 18); ctx.stroke();
 
@@ -713,7 +808,7 @@ function makeSign(title, desc = "") {
   ctx.fillText(title, 256, 44);
 
   if (desc) {
-    ctx.fillStyle = "#94a3b8";
+    ctx.fillStyle = "#cbd5e1";
     ctx.font = "600 20px 'JetBrains Mono', monospace";
     ctx.fillText(desc, 256, 80);
   }
@@ -731,7 +826,7 @@ function makeAgentTag(name, role, colorHex) {
   canvas.width = 256; canvas.height = 72;
   const ctx = canvas.getContext("2d");
 
-  ctx.fillStyle = "rgba(8, 14, 28, 0.88)";
+  ctx.fillStyle = "rgba(14, 26, 48, 0.88)";
   roundRect(ctx, 4, 4, 248, 64, 12); ctx.fill();
   ctx.strokeStyle = "#" + colorHex.toString(16).padStart(6, "0");
   ctx.lineWidth = 2;
@@ -742,7 +837,7 @@ function makeAgentTag(name, role, colorHex) {
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
   ctx.fillText(name, 128, 26);
 
-  ctx.fillStyle = "#94a3b8";
+  ctx.fillStyle = "#cbd5e1";
   ctx.font = "600 15px 'JetBrains Mono', monospace";
   ctx.fillText(role, 128, 48);
 
@@ -759,16 +854,16 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
 
-// Dark cybernetic skydome
+// Illuminated, clean futuristic skydome
 function makeSky() {
   const geo = new THREE.SphereGeometry(300, 32, 16);
   const mat = new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false,
     uniforms: {
-      top: { value: new THREE.Color(0x020409) },
-      mid: { value: new THREE.Color(0x061126) },
-      bottom: { value: new THREE.Color(0x0a1e3d) },
-      exponent: { value: 0.6 },
+      top: { value: new THREE.Color(0x102444) },
+      mid: { value: new THREE.Color(0x1e4270) },
+      bottom: { value: new THREE.Color(0x4279a8) },
+      exponent: { value: 0.5 },
     },
     vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
     fragmentShader: `varying vec3 vDir; uniform vec3 top; uniform vec3 mid; uniform vec3 bottom; uniform float exponent;

@@ -22,6 +22,14 @@ export function toonMat(color, opts = {}) {
   return new THREE.MeshToonMaterial({ color, gradientMap: TOON_GRADIENT, ...opts });
 }
 
+export function metalMat(color, { metalness = 0.75, roughness = 0.3, ...opts } = {}) {
+  return new THREE.MeshStandardMaterial({ color, metalness, roughness, ...opts });
+}
+
+export function techMat(color, { metalness = 0.45, roughness = 0.45, ...opts } = {}) {
+  return new THREE.MeshStandardMaterial({ color, metalness, roughness, ...opts });
+}
+
 // Objects on this layer are the ONLY things that bloom (rings, gates, goal,
 // coins, sparkles). Everything else - sky, platforms, characters - never blooms,
 // which keeps the picture crisp instead of washed out.
