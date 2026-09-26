@@ -560,6 +560,7 @@ export function startExplore(onEnter, opts = {}) {
 
     const a = (index / AGENTS_DATA.length) * Math.PI * 2;
     g.position.set(Math.cos(a) * 8.5, 1.8, Math.sin(a) * 8.5);
+    g.rotation.y = Math.atan2(-g.position.x, -g.position.z);
     scene.add(g);
 
     function setHappy(duration = 3.5) {
@@ -863,6 +864,8 @@ export function startExplore(onEnter, opts = {}) {
     const inRaw = controls.getInput();
     const look = controls.getLook();
     if (look.dx || look.dy) camera.rotate(look.dx, look.dy);
+    const zoom = controls.getZoom?.();
+    if (zoom) camera.zoom(zoom);
     const dir = intentToWorld(inRaw.fwd, inRaw.right, camera.state.yaw);
     const moving = Math.hypot(inRaw.fwd, inRaw.right) > 0.05;
     emotes.tick(dt, moving);
@@ -932,7 +935,14 @@ export function startExplore(onEnter, opts = {}) {
         n.group.position.z += (dz / dist) * n.speed * dt;
       }
       n.group.position.y = 1.8 + Math.sin(elapsed * 2.2 + n.ph) * 0.22;
-      n.group.rotation.y = Math.sin(elapsed * 0.6 + n.ph) * 0.4;
+      const pDist = Math.hypot(player.pos.x - n.group.position.x, player.pos.z - n.group.position.z);
+      if (pDist < 5.0) {
+        const targetAngle = Math.atan2(player.pos.x - n.group.position.x, player.pos.z - n.group.position.z);
+        n.group.rotation.y += (targetAngle - n.group.rotation.y) * 0.08;
+      } else if (dist > 0.1) {
+        const moveAngle = Math.atan2(dx, dz);
+        n.group.rotation.y += (moveAngle - n.group.rotation.y) * 0.06;
+      }
       n.tagSprite.quaternion.copy(camera.cam.quaternion);
       n.update?.(dt, elapsed);
     }

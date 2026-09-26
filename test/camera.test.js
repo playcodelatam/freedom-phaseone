@@ -103,4 +103,42 @@ describe("createFollowCamera", () => {
     c.follow(pos, 0.1, { facing: -1, moving: true });
     expect(c.state.yaw).toBeCloseTo(yawAfterDrag); // did not recenter yet
   });
+
+  it("zoom() adjusts targetRadius and clamps within min/max bounds", () => {
+    const c = createFollowCamera(1.6);
+    const initialRadius = c.state.targetRadius;
+
+    // Zoom out (positive delta / scroll down)
+    c.zoom(100);
+    expect(c.state.targetRadius).toBeGreaterThan(initialRadius);
+
+    // Zoom in (negative delta / scroll up)
+    c.zoom(-200);
+    expect(c.state.targetRadius).toBeLessThan(initialRadius);
+
+    // Zoom way in -> clamped to MIN_RADIUS (default 3.5)
+    for (let i = 0; i < 20; i++) c.zoom(-300);
+    expect(c.state.targetRadius).toBeCloseTo(3.5);
+
+    // Zoom way out -> clamped to MAX_RADIUS (default 28.0)
+    for (let i = 0; i < 30; i++) c.zoom(300);
+    expect(c.state.targetRadius).toBeCloseTo(28.0);
+  });
+
+  it("follow() smoothly eases radius toward targetRadius and snap() jumps directly", () => {
+    const c = createFollowCamera(1.6);
+    c.snap(pos);
+    c.zoom(100);
+    expect(c.state.radius).not.toBe(c.state.targetRadius);
+
+    // Smooth step
+    c.follow(pos, 0.05);
+    expect(c.state.radius).toBeGreaterThan(Math.hypot(9, 5.5));
+    expect(c.state.radius).toBeLessThanOrEqual(c.state.targetRadius);
+
+    // Snap synchronizes radius
+    c.snap(pos);
+    expect(c.state.radius).toBeCloseTo(c.state.targetRadius);
+  });
 });
+

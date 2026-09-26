@@ -426,6 +426,8 @@ function startGame(choice, onHome) {
       const inRaw = controls.getInput();
       const look = controls.getLook();
       if (look.dx || look.dy) camera.rotate(look.dx, look.dy);
+      const zoom = controls.getZoom?.();
+      if (zoom) camera.zoom(zoom);
       const dir = intentToWorld(inRaw.fwd, inRaw.right, camera.state.yaw);
       moving = Math.hypot(inRaw.fwd, inRaw.right) > 0.05;
       emotes.tick(dt, moving);

@@ -42,6 +42,15 @@ export function createControls() {
   window.addEventListener("keydown", down);
   window.addEventListener("keyup", up);
 
+  // ---- mouse wheel zoom ----
+  let zoomDelta = 0;
+  const onWheel = (e) => {
+    if (!enabled) return;
+    zoomDelta += e.deltaY;
+    e.preventDefault();
+  };
+  window.addEventListener("wheel", onWheel, { passive: false });
+
   // ---- pointer router (touch joystick/look + mouse look) ----
   const layer = document.getElementById("input-layer");
   const stick = document.getElementById("joystick");
@@ -143,17 +152,25 @@ export function createControls() {
     return out;
   }
 
+  function getZoom() {
+    const out = zoomDelta;
+    zoomDelta = 0;
+    return out;
+  }
+
   return {
     getInput,
     getLook,
+    getZoom,
     setEnabled(v) {
       enabled = v;
-      if (!v) { resetJoy(); look.id = null; look.dx = 0; look.dy = 0; }
+      if (!v) { resetJoy(); look.id = null; look.dx = 0; look.dy = 0; zoomDelta = 0; }
     },
     destroy() {
       document.body.classList.remove("in-3d");
       window.removeEventListener("keydown", down);
       window.removeEventListener("keyup", up);
+      window.removeEventListener("wheel", onWheel);
       if (layer) {
         layer.removeEventListener("pointerdown", onDown);
         layer.removeEventListener("pointermove", onMove);

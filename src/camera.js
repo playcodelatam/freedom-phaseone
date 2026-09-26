@@ -24,8 +24,10 @@ export function createFollowCamera(aspect, opts = {}) {
   const PITCH_MIN = Math.max(BASE_PITCH - 0.32, 0.12); // peek down a bit
   const PITCH_MAX = Math.min(BASE_PITCH + 0.42, Math.PI / 2 - 0.12); // peek up, never overhead
   const LOOK_AT_Y = 1; // aim at the chest, not the feet
+  const MIN_RADIUS = opts.minRadius ?? 3.5;
+  const MAX_RADIUS = opts.maxRadius ?? 28.0;
 
-  const state = { yaw: 0, pitch: BASE_PITCH };
+  const state = { yaw: 0, pitch: BASE_PITCH, radius: RADIUS, targetRadius: RADIUS };
   let elapsed = 0;
   let recenterAt = 0; // auto-follow stays suspended until elapsed passes this
 
@@ -36,9 +38,9 @@ export function createFollowCamera(aspect, opts = {}) {
     const cp = Math.cos(state.pitch);
     const sp = Math.sin(state.pitch);
     tmpTarget.set(
-      playerPos.x - Math.sin(state.yaw) * cp * RADIUS,
-      playerPos.y + sp * RADIUS,
-      playerPos.z - Math.cos(state.yaw) * cp * RADIUS
+      playerPos.x - Math.sin(state.yaw) * cp * state.radius,
+      playerPos.y + sp * state.radius,
+      playerPos.z - Math.cos(state.yaw) * cp * state.radius
     );
     return tmpTarget;
   }
@@ -50,6 +52,14 @@ export function createFollowCamera(aspect, opts = {}) {
     recenterAt = elapsed + 1.0;
   }
 
+  // mouse wheel zoom: scroll up (delta < 0) -> zoom in, scroll down (delta > 0) -> zoom out
+  function zoom(delta) {
+    if (!delta) return;
+    const steps = clamp(delta / 100, -3, 3);
+    const factor = Math.pow(1.15, steps);
+    state.targetRadius = clamp(state.targetRadius * factor, MIN_RADIUS, MAX_RADIUS);
+  }
+
   // follow opts: { facing, moving } let the camera ease back behind travel
   function follow(playerPos, dt, info = {}) {
     elapsed += dt;
@@ -57,6 +67,10 @@ export function createFollowCamera(aspect, opts = {}) {
     if (info.moving && elapsed >= recenterAt && info.facing != null) {
       state.yaw = approachAngle(state.yaw, info.facing, dt, 2.6);
     }
+    // smooth zoom interpolation
+    const rk = 1 - Math.pow(0.0001, dt);
+    state.radius += (state.targetRadius - state.radius) * rk;
+
     const target = desired(playerPos);
     const k = 1 - Math.pow(0.001, dt); // exponential smoothing toward the target
     cam.position.lerp(target, k);
@@ -66,11 +80,12 @@ export function createFollowCamera(aspect, opts = {}) {
   function snap(playerPos) {
     elapsed = 0;
     recenterAt = 0;
+    state.radius = state.targetRadius;
     cam.position.copy(desired(playerPos));
     cam.lookAt(playerPos.x, playerPos.y + LOOK_AT_Y, playerPos.z);
   }
 
-  return { cam, state, follow, snap, rotate };
+  return { cam, state, follow, snap, rotate, zoom };
 }
 
 // Convert camera-relative intent (fwd/right) into a world-space direction, given
