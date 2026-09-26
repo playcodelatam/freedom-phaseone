@@ -1,13 +1,8 @@
-# BrainBlox 🧩
+# ExploitGym 🛡️
 
-A Roblox-style 3D learning obby for kids (about age 8). Run and jump across a
-colorful floating obstacle course; clear each section by answering a friendly
-quiz question (math, reading, science, geography). Play alone or in a **private
-room with friends** and **talk over live voice**. Works on desktop and phone,
-with on-screen touch controls and a fullscreen button.
+A 3D cyber security & exploit training grounds template built with Three.js. Navigate 3D obstacle courses, bypass security gates by solving cybersecurity / exploit challenges, capture flags, and explore training arenas. Play alone or in a **private room with teammates** and **voice chat**. Works on desktop and mobile devices with touch controls.
 
-Built with **Three.js + Vite** (vanilla JS), **Supabase Realtime** for rooms, and
-**WebRTC** for voice.
+Built with **Three.js + Vite** (vanilla JS), **Supabase Realtime** for multiplayer rooms, and **WebRTC** for voice chat.
 
 ## Run it
 

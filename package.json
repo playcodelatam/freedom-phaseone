@@ -1,9 +1,9 @@
 {
-  "name": "brainblox",
+  "name": "exploitgym",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "BrainBlox - a Roblox-style 3D learning obby for kids, with private multiplayer rooms and voice chat.",
+  "description": "ExploitGym - a 3D gamified cyber training grounds and exploit challenge arena with multiplayer and voice chat.",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
