@@ -384,63 +384,246 @@ export function startExplore(onEnter, opts = {}) {
     scene.add(s); dataNodes.push(s);
   }
 
-  // ---------- 3D Autonomous AI Agents ----------
-  const npcs = [];
-  AGENTS_DATA.forEach((agent, i) => {
+  // ---------- Animated Bot Face Drawing Function (matching user images) ----------
+  function drawBotFace(ctx, agentColorHex, eyeState) {
+    ctx.clearRect(0, 0, 256, 256);
+    // Dark curved visor screen
+    ctx.fillStyle = "#080e1c";
+    roundRect(ctx, 4, 4, 248, 248, 52);
+    ctx.fill();
+
+    const eyeColor = "#" + agentColorHex.toString(16).padStart(6, "0");
+    const lookX = eyeState.lookX || 0;
+
+    if (eyeState.happyTimer > 0) {
+      // Happy glowing arcs: ^ ^ (like image 2)
+      ctx.strokeStyle = eyeColor;
+      ctx.lineWidth = 14;
+      ctx.lineCap = "round";
+
+      ctx.beginPath();
+      ctx.arc(80 + lookX, 122, 22, Math.PI * 1.15, Math.PI * 1.85);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(176 + lookX, 122, 22, Math.PI * 1.15, Math.PI * 1.85);
+      ctx.stroke();
+
+      // Big happy smile
+      ctx.beginPath();
+      ctx.arc(128, 150, 32, Math.PI * 0.15, Math.PI * 0.85);
+      ctx.stroke();
+    } else if (eyeState.isBlinking) {
+      // Blinking closed eye slit: _ _
+      ctx.strokeStyle = eyeColor;
+      ctx.lineWidth = 10;
+      ctx.lineCap = "round";
+
+      ctx.beginPath();
+      ctx.moveTo(60 + lookX, 120);
+      ctx.lineTo(100 + lookX, 120);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(156 + lookX, 120);
+      ctx.lineTo(196 + lookX, 120);
+      ctx.stroke();
+
+      // Gentle smile
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.arc(128, 155, 24, Math.PI * 0.2, Math.PI * 0.8);
+      ctx.stroke();
+    } else {
+      // Normal cute round glowing eyes (like images 1 & 3)
+      ctx.fillStyle = eyeColor;
+      const eyeH = 26;
+      const eyeW = 22;
+
+      ctx.beginPath();
+      ctx.ellipse(80 + lookX, 115, eyeW, eyeH, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.ellipse(176 + lookX, 115, eyeW, eyeH, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // White eye highlights (sparkles)
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(86 + lookX, 108, 7, 0, Math.PI * 2);
+      ctx.arc(182 + lookX, 108, 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Friendly smile mouth
+      ctx.strokeStyle = eyeColor;
+      ctx.lineWidth = 8;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.arc(128, 152, 25, Math.PI * 0.2, Math.PI * 0.8);
+      ctx.stroke();
+    }
+  }
+
+  // ---------- 3D Autonomous Cute AI Bot Agents ----------
+  const botWhiteMat = metalMat(0xf8fafc, { roughness: 0.16, metalness: 0.12 });
+  const darkBandMat = metalMat(0x1e293b, { roughness: 0.35, metalness: 0.5 });
+
+  function createCuteBot(agent, index) {
     const g = new THREE.Group();
+    const accentMat = metalMat(agent.color, { roughness: 0.22, metalness: 0.35 });
 
-    // Drone Capsule Body
-    const bodyGeo = new THREE.SphereGeometry(0.7, 16, 16);
-    bodyGeo.scale(1, 0.85, 1);
-    const bodyMat = metalMat(0x192d47, { metalness: 0.8, roughness: 0.25 });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.castShadow = true;
-    g.add(body);
+    // 1. Glossy White Rounded Head
+    const head = new THREE.Mesh(roundedGeo(1.32, 1.14, 1.0, 0.34, 3), botWhiteMat);
+    head.position.y = 0.52;
+    head.castShadow = true;
+    g.add(head);
 
-    // Glowing Optical Visor
-    const visorGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.15, 16);
-    const visorMat = new THREE.MeshBasicMaterial({ color: agent.color });
-    const visor = new THREE.Mesh(visorGeo, visorMat);
-    visor.rotation.x = Math.PI / 2; visor.position.set(0, 0.05, 0.6);
-    markBloom(visor);
-    g.add(visor);
+    // 2. Animated Face Canvas Visor
+    const faceCanvas = document.createElement("canvas");
+    faceCanvas.width = 256; faceCanvas.height = 256;
+    const fctx = faceCanvas.getContext("2d");
+    const faceTex = new THREE.CanvasTexture(faceCanvas);
+    faceTex.colorSpace = THREE.SRGBColorSpace;
 
-    // Revolving Orbital Ring
-    const haloGeo = new THREE.TorusGeometry(0.95, 0.04, 8, 24);
-    const haloMat = new THREE.MeshBasicMaterial({ color: agent.color });
-    const halo = new THREE.Mesh(haloGeo, haloMat);
-    halo.rotation.x = Math.PI / 2;
-    markBloom(halo);
-    g.add(halo);
+    const eyeState = {
+      isBlinking: false,
+      blinkTimer: 2.0 + Math.random() * 3,
+      blinkDuration: 0,
+      lookX: 0,
+      lookTimer: 2.0,
+      happyTimer: 0,
+    };
+    drawBotFace(fctx, agent.color, eyeState);
+    faceTex.needsUpdate = true;
 
-    // Bottom Thruster Glow
-    const thrusterGeo = new THREE.ConeGeometry(0.25, 0.5, 10);
-    const thrusterMat = new THREE.MeshBasicMaterial({ color: agent.color, transparent: true, opacity: 0.75 });
-    const thruster = new THREE.Mesh(thrusterGeo, thrusterMat);
-    thruster.rotation.x = Math.PI; thruster.position.y = -0.7;
-    markBloom(thruster);
-    g.add(thruster);
+    const faceMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.94, 0.78),
+      new THREE.MeshBasicMaterial({ map: faceTex, transparent: true })
+    );
+    faceMesh.position.set(0, 0.52, 0.52);
+    markBloom(faceMesh);
+    g.add(faceMesh);
 
-    // Floating Nametag Sprite
+    // 3. Headset / Ear Pods / Antenna (Alternating styles from images)
+    const hasHeadset = index % 2 === 0;
+    const earGeo = new THREE.CylinderGeometry(0.24, 0.26, 0.22, 16);
+    const earL = new THREE.Mesh(earGeo, accentMat);
+    earL.rotation.z = Math.PI / 2; earL.position.set(-0.73, 0.52, 0);
+    const earR = earL.clone(); earR.position.x = 0.73;
+    g.add(earL, earR);
+
+    if (hasHeadset) {
+      // Headset band over head + mic (Image 3)
+      const band = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.045, 8, 24, Math.PI), darkBandMat);
+      band.rotation.z = -Math.PI; band.position.set(0, 0.52, 0);
+      const micArm = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.35, 6), darkBandMat);
+      micArm.rotation.z = Math.PI / 3; micArm.position.set(0.55, 0.35, 0.25);
+      const micHead = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 8), darkBandMat);
+      micHead.position.set(0.68, 0.24, 0.38);
+      g.add(band, micArm, micHead);
+    } else {
+      // Top antenna with cute sphere (Image 1)
+      const antStem = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.25, 8), accentMat);
+      antStem.position.set(0, 1.15, 0);
+      const antBall = new THREE.Mesh(new THREE.SphereGeometry(0.14, 12, 12), accentMat);
+      antBall.position.set(0, 1.35, 0); markBloom(antBall);
+      g.add(antStem, antBall);
+    }
+
+    // 4. Floating Tapered Torso (Images 2 & 3)
+    const torsoGeo = new THREE.SphereGeometry(0.48, 20, 20);
+    torsoGeo.scale(0.85, 1.25, 0.85);
+    const torso = new THREE.Mesh(torsoGeo, botWhiteMat);
+    torso.position.y = -0.32; torso.castShadow = true;
+    g.add(torso);
+
+    const badgeGeo = new THREE.SphereGeometry(0.24, 12, 12);
+    badgeGeo.scale(0.9, 0.8, 0.3);
+    const badge = new THREE.Mesh(badgeGeo, accentMat);
+    badge.position.set(0, -0.28, 0.36);
+    g.add(badge);
+
+    // 5. Floating Hands / Arms (Images 2 & 3)
+    const armGeo = new THREE.SphereGeometry(0.14, 12, 12);
+    armGeo.scale(0.7, 1.8, 0.7);
+    const armL = new THREE.Mesh(armGeo, botWhiteMat);
+    armL.position.set(-0.62, -0.32, 0); armL.rotation.z = 0.2;
+    const armR = new THREE.Mesh(armGeo, botWhiteMat);
+    armR.position.set(0.62, -0.32, 0); armR.rotation.z = -0.2;
+    g.add(armL, armR);
+
+    // 6. Floating Nametag
     const tagSprite = makeAgentTag(agent.name, agent.role, agent.color);
-    tagSprite.position.y = 1.35;
+    tagSprite.position.y = 1.55;
     g.add(tagSprite);
 
-    const a = (i / AGENTS_DATA.length) * Math.PI * 2;
+    const a = (index / AGENTS_DATA.length) * Math.PI * 2;
     g.position.set(Math.cos(a) * 8.5, 1.8, Math.sin(a) * 8.5);
     scene.add(g);
 
-    npcs.push({
+    function setHappy(duration = 3.5) {
+      eyeState.happyTimer = duration;
+      drawBotFace(fctx, agent.color, eyeState);
+      faceTex.needsUpdate = true;
+    }
+
+    function update(dt, elapsed) {
+      eyeState.blinkTimer -= dt;
+      if (eyeState.blinkTimer <= 0 && !eyeState.isBlinking) {
+        eyeState.isBlinking = true;
+        eyeState.blinkDuration = 0.14;
+        drawBotFace(fctx, agent.color, eyeState);
+        faceTex.needsUpdate = true;
+      }
+      if (eyeState.isBlinking) {
+        eyeState.blinkDuration -= dt;
+        if (eyeState.blinkDuration <= 0) {
+          eyeState.isBlinking = false;
+          eyeState.blinkTimer = 2.5 + Math.random() * 3.5;
+          drawBotFace(fctx, agent.color, eyeState);
+          faceTex.needsUpdate = true;
+        }
+      }
+
+      if (eyeState.happyTimer > 0) {
+        eyeState.happyTimer -= dt;
+        if (eyeState.happyTimer <= 0) {
+          eyeState.happyTimer = 0;
+          drawBotFace(fctx, agent.color, eyeState);
+          faceTex.needsUpdate = true;
+        }
+      }
+
+      eyeState.lookTimer -= dt;
+      if (eyeState.lookTimer <= 0) {
+        eyeState.lookTimer = 1.5 + Math.random() * 2.5;
+        eyeState.lookX = (Math.random() - 0.5) * 16;
+        drawBotFace(fctx, agent.color, eyeState);
+        faceTex.needsUpdate = true;
+      }
+
+      armL.position.y = -0.32 + Math.sin(elapsed * 3 + index) * 0.05;
+      armR.position.y = -0.32 + Math.cos(elapsed * 3 + index) * 0.05;
+      armR.rotation.z = -0.2 + Math.sin(elapsed * 4 + index) * 0.12;
+    }
+
+    return {
       group: g,
-      halo,
-      visor,
       agent,
       tx: g.position.x,
       tz: g.position.z,
-      ph: i,
-      speed: 1.1 + (i % 3) * 0.25,
+      ph: index,
+      speed: 1.0 + (index % 3) * 0.2,
       tagSprite,
-    });
+      setHappy,
+      update,
+    };
+  }
+
+  const npcs = [];
+  AGENTS_DATA.forEach((agent, i) => {
+    npcs.push(createCuteBot(agent, i));
   });
 
   // ---------- Sector Terminals = Portals ----------
@@ -619,6 +802,7 @@ export function startExplore(onEnter, opts = {}) {
     sfx.sparkle();
     const npc = spot.npc;
     if (npc) {
+      npc.setHappy?.(3.5);
       npc.group.position.y += 0.35;
       spawnBurst({ x: spot.pos.x, y: 2.2, z: spot.pos.z }, "💾", 5, 0.6, 2.0);
       showAgentTransmission(npc.agent.name, npc.agent.quote);
@@ -736,7 +920,7 @@ export function startExplore(onEnter, opts = {}) {
       s.position.y = 4 + (s.userData.ph % 2) + Math.sin(elapsed * 1.5 + s.userData.ph) * 0.35;
     }
 
-    // Animate Autonomous AI Agents (Floating, bobbing, revolving halo)
+    // Animate Autonomous Cute AI Bots (Floating, bobbing, blinking animated eyes)
     for (const n of npcs) {
       const dx = n.tx - n.group.position.x, dz = n.tz - n.group.position.z;
       const dist = Math.hypot(dx, dz);
@@ -747,10 +931,10 @@ export function startExplore(onEnter, opts = {}) {
         n.group.position.x += (dx / dist) * n.speed * dt;
         n.group.position.z += (dz / dist) * n.speed * dt;
       }
-      n.group.position.y = 1.8 + Math.sin(elapsed * 2.2 + n.ph) * 0.25;
-      n.halo.rotation.z += dt * 1.8;
-      n.group.rotation.y = Math.sin(elapsed * 0.6 + n.ph) * 0.5;
+      n.group.position.y = 1.8 + Math.sin(elapsed * 2.2 + n.ph) * 0.22;
+      n.group.rotation.y = Math.sin(elapsed * 0.6 + n.ph) * 0.4;
       n.tagSprite.quaternion.copy(camera.cam.quaternion);
+      n.update?.(dt, elapsed);
     }
 
     if (net) {
