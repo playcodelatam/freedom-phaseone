@@ -1,10 +1,11 @@
-// Decorative life for the world: drifting clouds, low-poly toon trees + balloons
-// near checkpoints, a floating coin trail, plus transient win-confetti and
-// correct-answer sparkles. All decoration, no collision. Shares geometry and
-// materials per type and scales counts down on low-end devices via `density`.
+// ExploitGym — Cyber Props & Scenery Pipeline
+// Renders decorative high-tech life for the Exploit Arena:
+// telemetry relay pylons with blinking sensor heads, floating data probes,
+// collectible cryptographic token shards, drifting network data nodes, and
+// cybernetic particle discharge bursts.
 
 import * as THREE from "three";
-import { toonMat, markBloom } from "./gfx.js";
+import { metalMat, markBloom } from "./gfx.js";
 
 export function createProps(scene, world, density = 1) {
   const group = new THREE.Group();
@@ -12,104 +13,130 @@ export function createProps(scene, world, density = 1) {
 
   const clouds = [];
   const coins = [];
-  const balloons = [];
+  const balloons = []; // Re-purposed as floating data probes
   const transients = []; // { obj, age, ttl, tick }
 
-  // ---- clouds (icosahedron lumps) ----
-  const cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  const cloudGeo = new THREE.IcosahedronGeometry(1, 0);
-  const cloudCount = Math.round(16 * density);
+  // ---- Drifting Network Data Nodes (replaces puffy clouds) ----
+  const nodeGeo = new THREE.IcosahedronGeometry(0.7, 0);
+  const nodeMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff, wireframe: true, transparent: true, opacity: 0.35 });
+  const nodeCoreMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.5 });
+  const cloudCount = Math.round(14 * density);
+
   for (let i = 0; i < cloudCount; i++) {
     const cluster = new THREE.Group();
-    const lumps = 3 + (i % 2);
-    for (let j = 0; j < lumps; j++) {
-      const m = new THREE.Mesh(cloudGeo, cloudMat);
-      m.position.set(j * 1.1 - lumps * 0.5, (j % 2) * 0.3, (j % 2) * 0.4);
-      m.scale.set(1 + (j % 2) * 0.5, 0.7, 1 + (j % 2) * 0.4);
-      cluster.add(m);
-    }
-    cluster.position.set((i * 11) % 60 - 30, 7 + (i % 4) * 2.5, i * 9 - 6);
-    cluster.userData.speed = 0.3 + (i % 3) * 0.15;
+    const core = new THREE.Mesh(nodeGeo, nodeCoreMat);
+    const wire = new THREE.Mesh(new THREE.IcosahedronGeometry(1.2, 0), nodeMat);
+    markBloom(core);
+    cluster.add(core, wire);
+    cluster.position.set((i * 11) % 60 - 30, 8 + (i % 4) * 2.5, i * 9 - 6);
+    cluster.userData.speed = 0.4 + (i % 3) * 0.2;
+    cluster.userData.rotSpeed = 0.5 + (i % 2) * 0.5;
     group.add(cluster);
     clouds.push(cluster);
   }
 
-  // ---- collectible coin trail between checkpoints ----
-  const coinMat = new THREE.MeshBasicMaterial({ color: 0xffcf3a });
-  const coinGeo = new THREE.TorusGeometry(0.24, 0.1, 8, 16);
+  // ---- Collectible Cryptographic Token Shards between checkpoints ----
+  const tokenOuterMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff });
+  const tokenInnerMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+  const tokenOuterGeo = new THREE.TorusGeometry(0.24, 0.08, 8, 16);
+  const tokenInnerGeo = new THREE.OctahedronGeometry(0.14, 0);
+
   {
     const cps = world.checkpoints;
     const per = density > 0.5 ? 3 : 2;
-    // a checkpoint's pos.y is ring height (~ surface + 1); the player's chest sits
-    // near there, so coins placed at that height + a touch are easy to grab.
     for (let i = 0; i < cps.length; i++) {
       const a = i === 0 ? { x: world.spawn.x, y: 1, z: world.spawn.z } : cps[i - 1].pos;
       const b = cps[i].pos;
       for (let k = 1; k <= per; k++) {
         const t = k / (per + 1);
-        const coin = new THREE.Mesh(coinGeo, coinMat);
-        coin.position.set(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t + 0.2, a.z + (b.z - a.z) * t);
-        coin.userData.phase = i + k;
-        coin.userData.collected = false;
-        markBloom(coin);
-        group.add(coin);
-        coins.push(coin);
+        const token = new THREE.Group();
+
+        const ring = new THREE.Mesh(tokenOuterGeo, tokenOuterMat);
+        const core = new THREE.Mesh(tokenInnerGeo, tokenInnerMat);
+        token.add(ring, core);
+
+        token.position.set(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t + 0.25, a.z + (b.z - a.z) * t);
+        token.userData.phase = i + k;
+        token.userData.collected = false;
+
+        markBloom(ring);
+        markBloom(core);
+
+        group.add(token);
+        coins.push(token);
       }
     }
   }
 
-  // ---- trees + balloons near each checkpoint ----
-  const trunkMat = toonMat(0x9a6b4f);
-  const trunkGeo = new THREE.CylinderGeometry(0.16, 0.22, 1, 7);
-  const leafGeoA = new THREE.IcosahedronGeometry(0.7, 0);
-  const leafGeoB = new THREE.IcosahedronGeometry(0.5, 0);
-  const leafMatA = toonMat(0x6bd66a, { flatShading: true });
-  const leafMatB = toonMat(0x4fb85c, { flatShading: true });
-  const balloonGeo = new THREE.SphereGeometry(0.34, 12, 12);
-  const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 });
-  const lineGeo = new THREE.CylinderGeometry(0.01, 0.01, 1.2, 4);
+  // ---- Telemetry Relay Pylons (replaces cartoon trees) ----
+  const pylonMat = metalMat(0x132238, { metalness: 0.85, roughness: 0.25 });
+  const pylonGeo = new THREE.CylinderGeometry(0.12, 0.18, 2.4, 8);
+  const headGeo = new THREE.BoxGeometry(0.45, 0.35, 0.45);
+  const ledGeo = new THREE.SphereGeometry(0.1, 8, 8);
 
-  function tree(x, y, z, s) {
+  function createRelayPylon(x, y, z, s, colorHex) {
     const tg = new THREE.Group();
-    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-    trunk.position.y = 0.5;
-    trunk.castShadow = true;
-    const l1 = new THREE.Mesh(leafGeoA, leafMatA);
-    l1.position.y = 1.25;
-    l1.castShadow = true;
-    const l2 = new THREE.Mesh(leafGeoB, leafMatB);
-    l2.position.set(0.2, 1.7, 0.1);
-    tg.add(trunk, l1, l2);
+    const mast = new THREE.Mesh(pylonGeo, pylonMat);
+    mast.position.y = 1.2;
+    mast.castShadow = true;
+
+    const head = new THREE.Mesh(headGeo, metalMat(0x1a2e48));
+    head.position.y = 2.4;
+    head.castShadow = true;
+
+    const ledMat = new THREE.MeshBasicMaterial({ color: colorHex });
+    const led = new THREE.Mesh(ledGeo, ledMat);
+    led.position.set(0, 2.65, 0);
+    markBloom(led);
+
+    tg.add(mast, head, led);
     tg.position.set(x, y, z);
     tg.scale.setScalar(s);
     group.add(tg);
   }
 
+  // ---- Floating Sensor Data Probes (replaces balloons) ----
+  const probeCoreGeo = new THREE.SphereGeometry(0.24, 12, 12);
+  const probeRingGeo = new THREE.TorusGeometry(0.38, 0.04, 6, 20);
+  const tetherMat = new THREE.MeshBasicMaterial({ color: 0x00f5ff, transparent: true, opacity: 0.4 });
+  const tetherGeo = new THREE.CylinderGeometry(0.01, 0.01, 1.4, 4);
+
+  const TIER_COLORS = [0x00f5ff, 0x38bdf8, 0x00ff88, 0xf59e0b, 0xa855f7, 0xff0055];
+
   for (const cp of world.checkpoints) {
+    const colorHex = TIER_COLORS[cp.index % TIER_COLORS.length];
+
     if (density > 0.5) {
-      tree(-3.0, cp.pos.y - 1, cp.pos.z, 0.9 + (cp.index % 2) * 0.3);
-      tree(3.0, cp.pos.y - 1, cp.pos.z - 0.6, 0.8 + (cp.index % 3) * 0.2);
+      createRelayPylon(-3.0, cp.pos.y - 1, cp.pos.z, 0.9 + (cp.index % 2) * 0.2, colorHex);
+      createRelayPylon(3.0, cp.pos.y - 1, cp.pos.z - 0.6, 0.85 + (cp.index % 3) * 0.15, colorHex);
     }
-    // two balloons in the section color
-    const hue = [0xff8e72, 0x5fc6f0, 0x5fd69a, 0xffd45e, 0xbfa1ff, 0xff94bc][cp.index % 6];
-    for (const sx of [-1.4, 1.4]) {
-      const bg = new THREE.Group();
-      const line = new THREE.Mesh(lineGeo, lineMat);
-      line.position.y = 0.6;
-      const ball = new THREE.Mesh(balloonGeo, toonMat(hue));
-      ball.scale.y = 1.2;
-      ball.position.y = 1.5;
-      bg.add(line, ball);
-      bg.position.set(cp.pos.x + sx, cp.pos.y, cp.pos.z + 0.5);
-      bg.userData.phase = cp.index + sx;
-      group.add(bg);
-      balloons.push(bg);
+
+    for (const sx of [-1.5, 1.5]) {
+      const probeGroup = new THREE.Group();
+      const tether = new THREE.Mesh(tetherGeo, tetherMat);
+      tether.position.y = 0.7;
+
+      const probeMat = new THREE.MeshBasicMaterial({ color: colorHex });
+      const probeCore = new THREE.Mesh(probeCoreGeo, probeMat);
+      probeCore.position.y = 1.5;
+      markBloom(probeCore);
+
+      const probeRing = new THREE.Mesh(probeRingGeo, probeMat);
+      probeRing.position.y = 1.5;
+      probeRing.rotation.x = Math.PI / 2;
+      markBloom(probeRing);
+
+      probeGroup.add(tether, probeCore, probeRing);
+      probeGroup.position.set(cp.pos.x + sx, cp.pos.y, cp.pos.z + 0.5);
+      probeGroup.userData.phase = cp.index + sx;
+      group.add(probeGroup);
+      balloons.push(probeGroup);
     }
   }
 
-  // ---- power-up pickups (emoji sprites that float on the path) ----
+  // ---- Power-up Pickups (Cyber Overclocks & Zero-Days) ----
   const powerupItems = [];
-  function emojiSprite(char, size = 1.1) {
+  function emojiSprite(char, size = 1.2) {
     const canvas = document.createElement("canvas");
     canvas.width = canvas.height = 128;
     const ctx = canvas.getContext("2d");
@@ -123,12 +150,12 @@ export function createProps(scene, world, density = 1) {
     spr.scale.set(size, size, 1);
     return spr;
   }
+
   {
     const cps = world.checkpoints;
-    // a power-up roughly every other section, alternating type
     const defs = [
-      { type: "doublejump", char: "🎈", icon: "🎈", label: "Double Jump" },
-      { type: "speed", char: "⚡", icon: "⚡", label: "Speed Boost" },
+      { type: "doublejump", char: "🚀", icon: "🚀", label: "Kernel Overclock" },
+      { type: "speed", char: "⚡", icon: "⚡", label: "Zero-Day Exploit" },
     ];
     for (let i = 1; i < cps.length; i += 2) {
       const a = cps[i - 1].pos;
@@ -142,7 +169,7 @@ export function createProps(scene, world, density = 1) {
     }
   }
 
-  // ---- collection ----
+  // ---- Collection Checks ----
   function near(pos, obj, r = 1.5) {
     return (
       Math.abs(pos.x - obj.position.x) < r &&
@@ -151,7 +178,6 @@ export function createProps(scene, world, density = 1) {
     );
   }
 
-  // collect any coins the player is touching; returns the count grabbed
   function collectCoins(pos) {
     let got = 0;
     for (const c of coins) {
@@ -166,7 +192,6 @@ export function createProps(scene, world, density = 1) {
     return got;
   }
 
-  // collect a power-up if touched; returns its def ({type,icon,label}) or null
   function collectPowerup(pos) {
     for (const p of powerupItems) {
       if (p.userData.collected) continue;
@@ -180,7 +205,6 @@ export function createProps(scene, world, density = 1) {
     return null;
   }
 
-  // restore all coins + power-ups for a fresh run
   function resetCollectibles() {
     for (const c of coins) {
       c.userData.collected = false;
@@ -192,9 +216,9 @@ export function createProps(scene, world, density = 1) {
     }
   }
 
-  // ---- transient bursts ----
+  // ---- Transient Particle Bursts (Digital Sparkle & Hex Shards) ----
   function spawnSparkle(pos) {
-    const n = 14;
+    const n = 16;
     const positions = new Float32Array(n * 3);
     const vel = [];
     for (let i = 0; i < n; i++) {
@@ -202,15 +226,26 @@ export function createProps(scene, world, density = 1) {
       positions[i * 3 + 1] = pos.y;
       positions[i * 3 + 2] = pos.z;
       const a = (i / n) * Math.PI * 2;
-      vel.push(new THREE.Vector3(Math.cos(a) * 2, 3 + Math.random() * 2, Math.sin(a) * 2));
+      vel.push(new THREE.Vector3(Math.cos(a) * 2.2, 2.5 + Math.random() * 2, Math.sin(a) * 2.2));
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.22, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const pts = new THREE.Points(
+      geo,
+      new THREE.PointsMaterial({
+        color: 0x00f5ff,
+        size: 0.25,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+    );
     markBloom(pts);
     group.add(pts);
     transients.push({
-      obj: pts, age: 0, ttl: 0.7,
+      obj: pts,
+      age: 0,
+      ttl: 0.7,
       tick(dt, age) {
         const arr = geo.attributes.position.array;
         for (let i = 0; i < n; i++) {
@@ -225,10 +260,10 @@ export function createProps(scene, world, density = 1) {
   }
 
   function spawnConfetti(center) {
-    const colors = [0xff8e72, 0x5fc6f0, 0x5fd69a, 0xffd45e, 0xbfa1ff, 0xff94bc];
+    const colors = [0x00f5ff, 0x00ff88, 0x38bdf8, 0xa855f7, 0xf59e0b];
     const n = Math.round(50 * density);
-    const geo = new THREE.PlaneGeometry(0.18, 0.18);
-    const inst = new THREE.InstancedMesh(geo, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, vertexColors: false }), n);
+    const geo = new THREE.PlaneGeometry(0.2, 0.2);
+    const inst = new THREE.InstancedMesh(geo, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }), n);
     const dummy = new THREE.Object3D();
     const data = [];
     const col = new THREE.Color();
@@ -246,7 +281,9 @@ export function createProps(scene, world, density = 1) {
     }
     group.add(inst);
     transients.push({
-      obj: inst, age: 0, ttl: 2.4,
+      obj: inst,
+      age: 0,
+      ttl: 2.4,
       tick(dt) {
         for (let i = 0; i < n; i++) {
           const d = data[i];
@@ -265,12 +302,13 @@ export function createProps(scene, world, density = 1) {
   function update(dt, t) {
     for (const c of clouds) {
       c.position.x += c.userData.speed * dt;
+      c.rotation.y += c.userData.rotSpeed * dt;
       if (c.position.x > 36) c.position.x = -36;
     }
-    for (const coin of coins) {
-      if (!coin.visible) continue;
-      coin.rotation.y += dt * 2.5;
-      coin.position.y += Math.sin(t * 2 + coin.userData.phase) * dt * 0.4;
+    for (const token of coins) {
+      if (!token.visible) continue;
+      token.rotation.y += dt * 3.0;
+      token.position.y += Math.sin(t * 2.2 + token.userData.phase) * dt * 0.35;
     }
     for (const p of powerupItems) {
       if (!p.visible) continue;
@@ -278,7 +316,8 @@ export function createProps(scene, world, density = 1) {
       p.material.rotation = Math.sin(t * 2) * 0.2;
     }
     for (const b of balloons) {
-      b.rotation.z = Math.sin(t * 1.3 + b.userData.phase) * 0.12;
+      b.rotation.y += dt * 1.5;
+      b.position.y += Math.sin(t * 1.5 + b.userData.phase) * dt * 0.12;
     }
     for (let i = transients.length - 1; i >= 0; i--) {
       const tr = transients[i];

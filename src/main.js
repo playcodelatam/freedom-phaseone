@@ -142,15 +142,15 @@ function startGame(choice, onHome) {
   root.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0xdcefff, 60, 200);
+  scene.fog = new THREE.Fog(0x132742, 55, 195);
   scene.add(makeSky());
 
-  // ---------- lighting (baked-flat toy rig) ----------
-  const hemi = new THREE.HemisphereLight(0xfff7e6, 0xbfd4ff, 0.85);
+  // ---------- lighting (illuminated high-tech cyber facility) ----------
+  const hemi = new THREE.HemisphereLight(0xe2f1ff, 0x182942, 1.15);
   scene.add(hemi);
-  scene.add(new THREE.AmbientLight(0x9fb8e8, 0.16)); // floor so nothing goes black
+  scene.add(new THREE.AmbientLight(0x7da4c7, 0.45));
 
-  const sun = new THREE.DirectionalLight(0xfff1d6, 1.25);
+  const sun = new THREE.DirectionalLight(0xffffff, 1.6);
   sun.castShadow = true;
   sun.shadow.mapSize.set(HIGH_END ? 2048 : 1024, HIGH_END ? 2048 : 1024);
   sun.shadow.camera.near = 1;
@@ -165,8 +165,8 @@ function startGame(choice, onHome) {
   scene.add(sun);
   scene.add(sun.target);
 
-  // soft sky-blue fill from the opposite side (no shadow) lifts the dark faces
-  const fill = new THREE.DirectionalLight(0xbbd4ff, 0.35);
+  // Soft cyan accent fill from the opposite side lifts dark metallic faces
+  const fill = new THREE.DirectionalLight(0x00f5ff, 0.55);
   scene.add(fill);
 
   // ---------- world ----------
@@ -361,14 +361,14 @@ function startGame(choice, onHome) {
       if (streak > 0 && streak % 3 === 0) {
         hud.addStar();
         awardXp(15);
-        hud.showFlash(`${streak} in a row! Bonus ⭐`, 1200);
+        hud.showFlash(`⚡ ${streak} EXPLOIT STREAK! Bonus XP`, 1200);
       } else {
-        hud.showFlash("Gate open! 🎉", 900);
+        hud.showFlash("FIREWALL BYPASSED! 🔓", 900);
       }
     } else {
       sfx.wrong();
       streak = 0;
-      hud.showFlash("Try again!", 1000);
+      hud.showFlash("PAYLOAD BLOCKED // ACCESS DENIED 🚨", 1100);
       respawn(player, cp.pos); // back onto the safe pad, gate still locked
     }
     state = state === "win" ? "win" : "play";
@@ -436,7 +436,7 @@ function startGame(choice, onHome) {
       if (inRaw.jump && wasGrounded) sfx.jump();
       if (fell) {
         respawn(player, respawnPoint);
-        hud.showFlash("Whoops!", 700);
+        hud.showFlash("BUFFER OVERFLOW // RESPAWN ⚠️", 800);
       }
 
       // collect coins along the way
@@ -588,17 +588,17 @@ function rippleFlag(goal, t) {
   pos.needsUpdate = true;
 }
 
-// vertical gradient skydome (soft storybook sky)
+// vertical gradient skydome (illuminated cyber atmosphere)
 function makeSky() {
   const geo = new THREE.SphereGeometry(300, 32, 16);
   const mat = new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
     uniforms: {
-      top: { value: new THREE.Color(0x6fbeff) },
-      mid: { value: new THREE.Color(0x9ad4ff) },
-      bottom: { value: new THREE.Color(0xeaf6ff) },
-      exponent: { value: 0.55 },
+      top: { value: new THREE.Color(0x0e2038) },
+      mid: { value: new THREE.Color(0x193961) },
+      bottom: { value: new THREE.Color(0x386d9e) },
+      exponent: { value: 0.5 },
     },
     vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
     fragmentShader: `varying vec3 vDir; uniform vec3 top; uniform vec3 mid; uniform vec3 bottom; uniform float exponent;

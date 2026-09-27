@@ -30,11 +30,11 @@ export function createScene3d(spawn, opts = {}) {
   root.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0xdcefff, 50, 170);
+  scene.fog = new THREE.Fog(0x132742, 50, 175);
   scene.add(makeSky());
-  scene.add(new THREE.HemisphereLight(0xfff7e6, 0xbfd4ff, 0.9));
-  scene.add(new THREE.AmbientLight(0x9fb8e8, 0.18));
-  const sun = new THREE.DirectionalLight(0xfff1d6, 1.25);
+  scene.add(new THREE.HemisphereLight(0xe2f1ff, 0x182942, 1.15));
+  scene.add(new THREE.AmbientLight(0x7da4c7, 0.45));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.5);
   sun.castShadow = true;
   sun.shadow.mapSize.set(HIGH_END ? 2048 : 1024, HIGH_END ? 2048 : 1024);
   sun.shadow.camera.near = 1;
@@ -45,10 +45,14 @@ export function createScene3d(spawn, opts = {}) {
   sun.shadow.normalBias = 0.02;
   scene.add(sun, sun.target);
 
+  const fill = new THREE.DirectionalLight(0x00f5ff, 0.5);
+  fill.position.set(-20, 25, -15);
+  scene.add(fill);
+
   const colliders = [];
   const aabb = (cx, cy, cz, sx, sy, sz) => ({ min: { x: cx - sx / 2, y: cy - sy / 2, z: cz - sz / 2 }, max: { x: cx + sx / 2, y: cy + sy / 2, z: cz + sz / 2 } });
 
-  function addGround(radius, color = 0x7ed87e) {
+  function addGround(radius, color = 0x12243a) {
     const g = new THREE.Mesh(new THREE.CircleGeometry(radius, 48), toonMat(color));
     g.rotation.x = -Math.PI / 2;
     g.receiveShadow = true;
@@ -56,7 +60,7 @@ export function createScene3d(spawn, opts = {}) {
     colliders.push(aabb(0, -0.5, 0, radius * 2, 1, radius * 2));
     return g;
   }
-  function addGroundPlane(w, d, color = 0x7ed87e) {
+  function addGroundPlane(w, d, color = 0x12243a) {
     const g = new THREE.Mesh(new THREE.PlaneGeometry(w, d), toonMat(color));
     g.rotation.x = -Math.PI / 2;
     g.receiveShadow = true;
@@ -131,7 +135,7 @@ function makeSky() {
   const geo = new THREE.SphereGeometry(300, 32, 16);
   const mat = new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false,
-    uniforms: { top: { value: new THREE.Color(0x6fbeff) }, mid: { value: new THREE.Color(0x9ad4ff) }, bottom: { value: new THREE.Color(0xeaf6ff) }, exponent: { value: 0.55 } },
+    uniforms: { top: { value: new THREE.Color(0x0e2038) }, mid: { value: new THREE.Color(0x193961) }, bottom: { value: new THREE.Color(0x386d9e) }, exponent: { value: 0.5 } },
     vertexShader: `varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
     fragmentShader: `varying vec3 vDir; uniform vec3 top; uniform vec3 mid; uniform vec3 bottom; uniform float exponent;
       void main(){ float t = pow(max(vDir.y,0.0), exponent); vec3 c = t < 0.5 ? mix(bottom, mid, t*2.0) : mix(mid, top, (t-0.5)*2.0); gl_FragColor = vec4(c, 1.0); }`,
