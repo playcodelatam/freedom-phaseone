@@ -980,25 +980,22 @@ export function startExplore(onEnter, opts = {}) {
     if (net) net.leave();
     document.getElementById("explore-bar")?.classList.add("hidden");
 
-    // Dispose all scene geometries, materials, and textures
+    // Dispose scene meshes, geometries, and non-shared materials
     scene.traverse((obj) => {
       if (obj.geometry) obj.geometry.dispose();
       if (obj.material) {
-        if (Array.isArray(obj.material)) {
-          obj.material.forEach((m) => {
-            m.map?.dispose();
-            m.dispose();
-          });
-        } else {
-          obj.material.map?.dispose();
-          obj.material.dispose();
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        for (const m of mats) {
+          if (m.userData?.shared) continue; // preserve shared materials like OUTLINE_MAT
+          m.dispose();
         }
       }
     });
     serverLedTex?.dispose();
     sc1Tex?.dispose();
     sc2Tex?.dispose();
-    agents.forEach((ag) => ag.faceTex?.dispose());
+    texCache?.forEach((tex) => tex.dispose());
+    texCache?.clear();
 
     renderer.dispose();
     if (renderer.domElement.parentElement) renderer.domElement.parentElement.removeChild(renderer.domElement);
