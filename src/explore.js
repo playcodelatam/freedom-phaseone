@@ -545,13 +545,14 @@ export function startExplore(onEnter, opts = {}) {
     g.add(tagSprite);
 
     const SECTOR_PATROLS = [
-      { cx: 24, cz: 0, r: 4.2 },   // Agent-01: Network Vault (Sector Beta - East)
-      { cx: 0, cz: -24, r: 4.2 },  // Agent-02: Neural Bay (Sector Alpha - North)
-      { cx: 0, cz: 0, r: 4.5 },    // Agent-03: Central Hub
-      { cx: -24, cz: 0, r: 4.2 },  // Agent-04: Crypto Vault (Sector Delta - West)
-      { cx: -2.5, cz: -24, r: 3 }, // Agent-05: Prompt Guard (Sector Alpha - North)
-      { cx: 0, cz: 24, r: 4.2 },   // Agent-06: Binary Bay (Sector Gamma - South)
+      { cx: 36, cz: -28, r: 4.5 },  // Agent-01: Weapons & Navigation
+      { cx: -12, cz: -18, r: 4.5 }, // Agent-02: MedBay & Cafeteria
+      { cx: 16, cz: 4, r: 4.5 },    // Agent-03: Admin & Storage
+      { cx: -54, cz: 0, r: 4.5 },   // Agent-04: Security & Reactor
+      { cx: -14, cz: 12, r: 4.5 },  // Agent-05: Electrical & O2
+      { cx: -36, cz: -24, r: 4.5 }, // Agent-06: Upper & Lower Engines
     ];
+
 
     const patrol = SECTOR_PATROLS[index % SECTOR_PATROLS.length];
     g.position.set(patrol.cx + (Math.random() - 0.5) * 2, 1.8, patrol.cz + (Math.random() - 0.5) * 2);
@@ -698,8 +699,9 @@ export function startExplore(onEnter, opts = {}) {
 
 
   // ---------- Player + Camera + Controls ----------
-  const player = createPlayer({ x: 0, y: 1.5, z: -2 });
+  const player = createPlayer({ x: 0, y: 1.5, z: -30 });
   player.facing = 0;
+
   if (import.meta.env.DEV) window.__bbPlayer = player;
   const avatar = createAvatar(profile.getColor(), "", profile.getHat());
   scene.add(avatar.root);
@@ -897,9 +899,9 @@ export function startExplore(onEnter, opts = {}) {
 
     updatePlayer(player, dt, { moveX: dir.x, moveZ: dir.z, jump: inRaw.jump }, colliders);
 
-    // Keep inside station boundaries
-    if (player.pos.y < -5 || Math.hypot(player.pos.x, player.pos.z) > 42) {
-      respawn(player, { x: 0, y: 1.5, z: -2 });
+    // Keep inside Skeld station boundaries
+    if (player.pos.y < -5 || Math.abs(player.pos.x) > 75 || Math.abs(player.pos.z) > 60) {
+      respawn(player, { x: 0, y: 1.5, z: -30 });
     }
 
     // Nearest sector portal detection
@@ -950,15 +952,16 @@ export function startExplore(onEnter, opts = {}) {
       s.position.y = 4 + (s.userData.ph % 2) + Math.sin(elapsed * 1.5 + s.userData.ph) * 0.35;
     }
 
-    // Animate Autonomous Cute AI Bots (Sector Patrols)
+    // Animate Autonomous Cute AI Bots (The Skeld Sector Patrols)
     const SECTOR_PATROLS = [
-      { cx: 24, cz: 0, r: 4.2 },   // Agent-01: Network Vault (Sector Beta - East)
-      { cx: 0, cz: -24, r: 4.2 },  // Agent-02: Neural Bay (Sector Alpha - North)
-      { cx: 0, cz: 0, r: 4.5 },    // Agent-03: Central Hub
-      { cx: -24, cz: 0, r: 4.2 },  // Agent-04: Crypto Vault (Sector Delta - West)
-      { cx: -2.5, cz: -24, r: 3 }, // Agent-05: Prompt Guard (Sector Alpha - North)
-      { cx: 0, cz: 24, r: 4.2 },   // Agent-06: Binary Bay (Sector Gamma - South)
+      { cx: 36, cz: -28, r: 4.5 },  // Agent-01: Weapons & Navigation
+      { cx: -12, cz: -18, r: 4.5 }, // Agent-02: MedBay & Cafeteria
+      { cx: 16, cz: 4, r: 4.5 },    // Agent-03: Admin & Storage
+      { cx: -54, cz: 0, r: 4.5 },   // Agent-04: Security & Reactor
+      { cx: -14, cz: 12, r: 4.5 },  // Agent-05: Electrical & O2
+      { cx: -36, cz: -24, r: 4.5 }, // Agent-06: Upper & Lower Engines
     ];
+
 
     for (const n of npcs) {
       const patrol = SECTOR_PATROLS[n.ph % SECTOR_PATROLS.length];
