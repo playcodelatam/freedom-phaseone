@@ -18,6 +18,9 @@ import { createVoice } from "./voice.js";
 import { createRemotePlayers } from "./remotePlayers.js";
 import { colorForId } from "./avatar.js";
 import * as profile from "./profile.js";
+import { buildFacility } from "./facility.js";
+import { ContainmentManager, launchTaskModal } from "./tasks.js";
+
 
 const HIGH_END = !isTouchDevice() && window.devicePixelRatio < 2.5 && (navigator.hardwareConcurrency || 4) > 4;
 const LOW = isTouchDevice() && window.devicePixelRatio >= 2;
@@ -89,10 +92,10 @@ export function startExplore(onEnter, opts = {}) {
     max: { x: cx + sx / 2, y: cy + sy / 2, z: cz + sz / 2 },
   });
 
-  const R = 30; // Lab campus radius
+  const R = 42; // Continuous Station foundation radius
 
-  // Polished metallic architectural floor
-  const ground = new THREE.Mesh(new THREE.CircleGeometry(R + 4, 48), metalMat(0x16253d, { roughness: 0.35, metalness: 0.65 }));
+  // Polished metallic architectural foundation floor
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(R + 4, 48), metalMat(0x0e1726, { roughness: 0.45, metalness: 0.55 }));
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   scene.add(ground);
@@ -100,36 +103,19 @@ export function startExplore(onEnter, opts = {}) {
   if (import.meta.env.DEV) window.__bbColliders = colliders;
 
   // Central Hub Plaza (Brighter titanium finish with specular reflection)
-  const plaza = new THREE.Mesh(new THREE.CircleGeometry(11.5, 40), metalMat(0x223a5e, { roughness: 0.22, metalness: 0.75 }));
+  const plaza = new THREE.Mesh(new THREE.CircleGeometry(9.5, 40), metalMat(0x1a2e4c, { roughness: 0.22, metalness: 0.75 }));
   plaza.rotation.x = -Math.PI / 2;
   plaza.position.y = 0.02;
   plaza.receiveShadow = true;
   scene.add(plaza);
 
   // Concentric Glowing Circuit Rings on floor
-  const floorRing1 = new THREE.Mesh(new THREE.TorusGeometry(11.4, 0.1, 8, 48), new THREE.MeshBasicMaterial({ color: 0x00f5ff }));
+  const floorRing1 = new THREE.Mesh(new THREE.TorusGeometry(9.4, 0.1, 8, 48), new THREE.MeshBasicMaterial({ color: 0x00f5ff }));
   floorRing1.rotation.x = Math.PI / 2; floorRing1.position.y = 0.04; markBloom(floorRing1);
-  const floorRing2 = new THREE.Mesh(new THREE.TorusGeometry(5.5, 0.08, 8, 40), new THREE.MeshBasicMaterial({ color: 0x00ff88 }));
+  const floorRing2 = new THREE.Mesh(new THREE.TorusGeometry(4.8, 0.08, 8, 40), new THREE.MeshBasicMaterial({ color: 0x00ff88 }));
   floorRing2.rotation.x = Math.PI / 2; floorRing2.position.y = 0.04; markBloom(floorRing2);
-  const floorRing3 = new THREE.Mesh(new THREE.TorusGeometry(17.8, 0.08, 8, 48), new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.7 }));
-  floorRing3.rotation.x = Math.PI / 2; floorRing3.position.y = 0.03; markBloom(floorRing3);
-  scene.add(floorRing1, floorRing2, floorRing3);
+  scene.add(floorRing1, floorRing2);
 
-  // Outer Perimeter Laser Forcefield
-  const laserPerimeter = new THREE.Mesh(new THREE.TorusGeometry(R + 1, 0.16, 12, 60), new THREE.MeshBasicMaterial({ color: 0x00f5ff }));
-  laserPerimeter.rotation.x = Math.PI / 2; laserPerimeter.position.y = 0.8; markBloom(laserPerimeter);
-  scene.add(laserPerimeter);
-
-  // Perimeter security pylons
-  for (let i = 0; i < 24; i++) {
-    const a = (i / 24) * Math.PI * 2;
-    const px = Math.cos(a) * (R + 1), pz = Math.sin(a) * (R + 1);
-    const pPost = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 1.6, 8), metalMat(0x283b54));
-    pPost.position.set(px, 0.8, pz);
-    const pCap = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00f5ff }));
-    pCap.position.set(px, 1.65, pz); markBloom(pCap);
-    scene.add(pPost, pCap);
-  }
 
   // ---------- Central AI Quantum Reactor Core ----------
   const reactor = new THREE.Group();
@@ -558,9 +544,18 @@ export function startExplore(onEnter, opts = {}) {
     tagSprite.position.y = 1.55;
     g.add(tagSprite);
 
-    const a = (index / AGENTS_DATA.length) * Math.PI * 2;
-    g.position.set(Math.cos(a) * 8.5, 1.8, Math.sin(a) * 8.5);
-    g.rotation.y = Math.atan2(-g.position.x, -g.position.z);
+    const SECTOR_PATROLS = [
+      { cx: 24, cz: 0, r: 4.2 },   // Agent-01: Network Vault (Sector Beta - East)
+      { cx: 0, cz: -24, r: 4.2 },  // Agent-02: Neural Bay (Sector Alpha - North)
+      { cx: 0, cz: 0, r: 4.5 },    // Agent-03: Central Hub
+      { cx: -24, cz: 0, r: 4.2 },  // Agent-04: Crypto Vault (Sector Delta - West)
+      { cx: -2.5, cz: -24, r: 3 }, // Agent-05: Prompt Guard (Sector Alpha - North)
+      { cx: 0, cz: 24, r: 4.2 },   // Agent-06: Binary Bay (Sector Gamma - South)
+    ];
+
+    const patrol = SECTOR_PATROLS[index % SECTOR_PATROLS.length];
+    g.position.set(patrol.cx + (Math.random() - 0.5) * 2, 1.8, patrol.cz + (Math.random() - 0.5) * 2);
+    g.rotation.y = Math.random() * Math.PI * 2;
     scene.add(g);
 
     function setHappy(duration = 3.5) {
@@ -627,57 +622,83 @@ export function startExplore(onEnter, opts = {}) {
     npcs.push(createCuteBot(agent, i));
   });
 
-  // ---------- Sector Terminals = Portals ----------
+  // ---------- Build Modular Continuous Facility & Containment System ----------
   const portals = [];
-  const ringR = 18;
-  ZONES.forEach((z, i) => {
-    const ang = (i / ZONES.length) * Math.PI * 2;
-    const bx = Math.cos(ang) * ringR;
-    const bz = Math.sin(ang) * ringR;
-    const facing = Math.atan2(-bx, -bz);
+  let facilityInstance = null;
 
-    const group = new THREE.Group();
-    group.position.set(bx, 0, bz);
-    group.rotation.y = facing;
-    scene.add(group);
-
-    const base = new THREE.Mesh(roundedGeo(6, 0.6, 2.5, 0.2, 2), metalMat(0x192b42));
-    base.position.y = 0.3; base.castShadow = true; base.receiveShadow = true;
-    group.add(base);
-    colliders.push(aabb(bx, 1.5, bz, 5.5, 3, 2));
-
-    const pLeft = new THREE.Mesh(roundedGeo(0.5, 4.2, 0.5, 0.08, 1), metalMat(0x273d5c));
-    pLeft.position.set(-2.5, 2.1, 0); pLeft.castShadow = true;
-    const pRight = pLeft.clone(); pRight.position.x = 2.5;
-    const pTop = new THREE.Mesh(roundedGeo(5.5, 0.5, 0.6, 0.08, 1), metalMat(0x273d5c));
-    pTop.position.set(0, 4.2, 0);
-    group.add(pLeft, pRight, pTop);
-
-    const hFrame = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 3.8), new THREE.MeshBasicMaterial({ color: z.color, transparent: true, opacity: 0.18, side: THREE.DoubleSide }));
-    hFrame.position.set(0, 2.1, 0);
-    markBloom(hFrame);
-    group.add(hFrame);
-
-    const sign = makeSign(z.emoji + " " + z.name, z.desc);
-    sign.position.set(0, 5.2, 0);
-    group.add(sign);
-
-    const padPos = new THREE.Vector3(bx * 0.74, 0.05, bz * 0.74);
-    const pad = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 0.12, 24), new THREE.MeshBasicMaterial({ color: z.color }));
-    pad.position.copy(padPos); pad.position.y = 0.06;
-    markBloom(pad); scene.add(pad);
-
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(2, 0.12, 10, 28), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    ring.rotation.x = Math.PI / 2; ring.position.copy(padPos); ring.position.y = 0.14;
-    markBloom(ring); scene.add(ring);
-
-    portals.push({ ...z, padPos, ring, sign });
+  // Containment Integrity & Alert System
+  const containment = new ContainmentManager({
+    onBreachChange: (breach) => {
+      if (breach) {
+        showAgentTransmission("CONTAINMENT ALERT", `SECURITY BREACH IN ${breach.sector.toUpperCase()}! Stabilize terminal!`);
+        for (const n of npcs) n.speed = 1.9;
+      } else {
+        showAgentTransmission("CONTAINMENT STABILIZED", `All sector integrity conduits restored to normal operating levels.`);
+        for (const n of npcs) {
+          n.speed = 1.0 + (n.ph % 3) * 0.2;
+          n.setHappy?.(4.0);
+        }
+      }
+    },
   });
 
-  if (import.meta.env.DEV) window.__bbPortals = portals.map((p) => ({ key: p.key, x: p.padPos.x, z: p.padPos.z }));
+  buildFacility(scene, colliders).then((fac) => {
+    facilityInstance = fac;
+
+    // Register sector airlocks / portals
+    for (const sp of fac.sectorPortals) {
+      const pad = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.8, 0.12, 24), new THREE.MeshBasicMaterial({ color: sp.color }));
+      pad.position.copy(sp.padPos);
+      pad.position.y = 0.06;
+      markBloom(pad);
+      scene.add(pad);
+
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(1.8, 0.1, 10, 28), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      ring.rotation.x = Math.PI / 2;
+      ring.position.copy(sp.padPos);
+      ring.position.y = 0.14;
+      markBloom(ring);
+      scene.add(ring);
+
+      const sign = makeSign(sp.emoji + " " + sp.name, sp.desc);
+      sign.position.set(sp.padPos.x, 3.8, sp.padPos.z);
+      scene.add(sign);
+
+      portals.push({ ...sp, ring, sign });
+    }
+
+    if (import.meta.env.DEV) window.__bbPortals = portals.map((p) => ({ key: p.key, x: p.padPos.x, z: p.padPos.z }));
+
+    // Register interactive Task Consoles into interactions
+    const taskInteractions = fac.taskSpots.map((t) => ({
+      key: t.id,
+      pos: t.pos,
+      range: 2.6,
+      icon: t.icon,
+      label: `Task: ${t.name}`,
+      act: () => {
+        launchTaskModal(t.taskKey, (resolvedKey) => {
+          containment.resolveBreach(resolvedKey);
+          spawnBurst(player.pos, "⚡", 10, 1.2, 2.5);
+          showAgentTransmission("CONTAINMENT SYSTEM", `Task verified. Sector integrity boosted!`);
+        });
+      },
+    }));
+
+    interactions.setSpots([
+      { key: "core", pos: { x: 0, z: 0 }, range: 3.8, icon: "⚡", label: "Sync Core", act: syncCore },
+      ...workstationSpots.map((ws, i) => ({
+        key: `workstation${i}`, pos: ws, range: 2.5, icon: "💻", label: "Access Terminal", act: accessTerminal,
+      })),
+      ...taskInteractions,
+    ]);
+  }).catch((err) => {
+    console.error("[explore] Failed to build modular facility:", err);
+  });
+
 
   // ---------- Player + Camera + Controls ----------
-  const player = createPlayer({ x: 0, y: 1.5, z: -7 });
+  const player = createPlayer({ x: 0, y: 1.5, z: -2 });
   player.facing = 0;
   if (import.meta.env.DEV) window.__bbPlayer = player;
   const avatar = createAvatar(profile.getColor(), "", profile.getHat());
@@ -861,6 +882,10 @@ export function startExplore(onEnter, opts = {}) {
     const dt = Math.min((now - last) / 1000, 0.05); last = now; elapsed += dt;
     if (syncCooldown > 0) syncCooldown -= dt;
 
+    // Containment Integrity decay & alarm state
+    containment.update(dt);
+    facilityInstance?.setAlarmState(!!containment.activeBreach || containment.integrity < 35, elapsed);
+
     const inRaw = controls.getInput();
     const look = controls.getLook();
     if (look.dx || look.dy) camera.rotate(look.dx, look.dy);
@@ -872,10 +897,10 @@ export function startExplore(onEnter, opts = {}) {
 
     updatePlayer(player, dt, { moveX: dir.x, moveZ: dir.z, jump: inRaw.jump }, colliders);
 
-    // Keep inside campus perimeter
-    const d = Math.hypot(player.pos.x, player.pos.z);
-    if (d > R) { player.pos.x *= R / d; player.pos.z *= R / d; }
-    if (player.pos.y < -10) respawn(player, { x: 0, y: 1.5, z: -7 });
+    // Keep inside station boundaries
+    if (player.pos.y < -5 || Math.hypot(player.pos.x, player.pos.z) > 42) {
+      respawn(player, { x: 0, y: 1.5, z: -2 });
+    }
 
     // Nearest sector portal detection
     if (!mp) {
@@ -912,9 +937,11 @@ export function startExplore(onEnter, opts = {}) {
 
     // Animate sector portals & signs
     for (const p of portals) {
-      p.ring.rotation.z += dt * 1.5;
-      p.ring.scale.setScalar(1 + Math.sin(elapsed * 3) * 0.06);
-      p.sign.quaternion.copy(camera.cam.quaternion);
+      if (p.ring) {
+        p.ring.rotation.z += dt * 1.5;
+        p.ring.scale.setScalar(1 + Math.sin(elapsed * 3) * 0.06);
+      }
+      if (p.sign) p.sign.quaternion.copy(camera.cam.quaternion);
     }
 
     // Animate ambient data nodes
@@ -923,13 +950,24 @@ export function startExplore(onEnter, opts = {}) {
       s.position.y = 4 + (s.userData.ph % 2) + Math.sin(elapsed * 1.5 + s.userData.ph) * 0.35;
     }
 
-    // Animate Autonomous Cute AI Bots (Floating, bobbing, blinking animated eyes)
+    // Animate Autonomous Cute AI Bots (Sector Patrols)
+    const SECTOR_PATROLS = [
+      { cx: 24, cz: 0, r: 4.2 },   // Agent-01: Network Vault (Sector Beta - East)
+      { cx: 0, cz: -24, r: 4.2 },  // Agent-02: Neural Bay (Sector Alpha - North)
+      { cx: 0, cz: 0, r: 4.5 },    // Agent-03: Central Hub
+      { cx: -24, cz: 0, r: 4.2 },  // Agent-04: Crypto Vault (Sector Delta - West)
+      { cx: -2.5, cz: -24, r: 3 }, // Agent-05: Prompt Guard (Sector Alpha - North)
+      { cx: 0, cz: 24, r: 4.2 },   // Agent-06: Binary Bay (Sector Gamma - South)
+    ];
+
     for (const n of npcs) {
+      const patrol = SECTOR_PATROLS[n.ph % SECTOR_PATROLS.length];
       const dx = n.tx - n.group.position.x, dz = n.tz - n.group.position.z;
       const dist = Math.hypot(dx, dz);
       if (dist < 0.6) {
-        const a = Math.random() * Math.PI * 2, r = 5 + Math.random() * 12;
-        n.tx = Math.cos(a) * r; n.tz = Math.sin(a) * r;
+        const a = Math.random() * Math.PI * 2, r = Math.random() * patrol.r;
+        n.tx = patrol.cx + Math.cos(a) * r;
+        n.tz = patrol.cz + Math.sin(a) * r;
       } else {
         n.group.position.x += (dx / dist) * n.speed * dt;
         n.group.position.z += (dz / dist) * n.speed * dt;
@@ -975,6 +1013,8 @@ export function startExplore(onEnter, opts = {}) {
     controls.destroy?.();
     emotes.destroy?.();
     interactions.destroy?.();
+    containment.destroy();
+    document.getElementById("task-modal")?.remove();
     if (remote) remote.destroy();
     if (voice) voice.stop();
     if (net) net.leave();
@@ -1002,6 +1042,7 @@ export function startExplore(onEnter, opts = {}) {
   }
   return { destroy };
 }
+
 
 // Generates high-tech floating holographic signs for sectors
 function makeSign(title, desc = "") {

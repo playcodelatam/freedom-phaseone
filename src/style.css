@@ -1744,3 +1744,365 @@ body.in-3d.touch .jump-btn { display: flex; }
 .term-cyan { color: #38bdf8; }
 .term-green { color: #00ff88; }
 .term-amber { color: #f59e0b; }
+
+/* ============ CONTAINMENT INTEGRITY HUD ============ */
+.containment-hud {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 52;
+  pointer-events: none;
+  width: min(460px, 90vw);
+}
+.containment-bar-wrap {
+  background: rgba(7, 15, 30, 0.9);
+  border: 1px solid rgba(0, 245, 255, 0.35);
+  border-radius: 12px;
+  padding: 8px 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 245, 255, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.containment-bar-wrap.warn {
+  border-color: #f59e0b;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(245, 158, 11, 0.3);
+}
+.containment-bar-wrap.critical,
+.containment-bar-wrap.pulsing {
+  border-color: #ff0055;
+  box-shadow: 0 4px 25px rgba(255, 0, 85, 0.5);
+  animation: breachPulse 1s infinite alternate;
+}
+@keyframes breachPulse {
+  from { box-shadow: 0 0 10px rgba(255, 0, 85, 0.3); }
+  to { box-shadow: 0 0 25px rgba(255, 0, 85, 0.8); }
+}
+.containment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.containment-bar-wrap.good .containment-header { color: #00f5ff; }
+.containment-bar-wrap.warn .containment-header { color: #f59e0b; }
+.containment-bar-wrap.critical .containment-header { color: #ff0055; }
+.containment-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.containment-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease, background 0.3s;
+}
+.containment-bar-wrap.good .containment-fill {
+  background: linear-gradient(90deg, #00f5ff, #00ff88);
+  box-shadow: 0 0 10px #00ff88;
+}
+.containment-bar-wrap.warn .containment-fill {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  box-shadow: 0 0 10px #f59e0b;
+}
+.containment-bar-wrap.critical .containment-fill {
+  background: linear-gradient(90deg, #ff0055, #f43f5e);
+  box-shadow: 0 0 10px #ff0055;
+}
+.breach-alert {
+  margin-top: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  color: #ff0055;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.breach-alert.warning { color: #f59e0b; }
+
+/* ============ INTERACTIVE CYBER TASKS MODAL ============ */
+.task-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 8, 18, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 95;
+  padding: 16px;
+}
+.task-card {
+  width: min(580px, 95vw);
+  background: #091322;
+  border: 2px solid #00f5ff;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 0 35px rgba(0, 245, 255, 0.3), var(--shadow);
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.task-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid rgba(0, 245, 255, 0.25);
+  padding-bottom: 12px;
+}
+.task-sector-tag {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #00ff88;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.task-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 20px;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 4px 0 0 0;
+}
+.task-desc {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: #94a3b8;
+  line-height: 1.4;
+  margin: 0;
+}
+.filter-instruction {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: #e2e8f0;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.task-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Prompt filter task */
+.prompt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.prompt-btn {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #e2e8f0;
+  font-family: 'JetBrains Mono', monospace;
+}
+.prompt-btn:hover {
+  border-color: #00f5ff;
+  background: rgba(0, 245, 255, 0.08);
+}
+.prompt-index {
+  font-size: 10px;
+  color: #38bdf8;
+  font-weight: bold;
+}
+.prompt-content {
+  font-size: 13px;
+  line-height: 1.35;
+}
+.prompt-btn.quarantined {
+  border-color: #00ff88;
+  background: rgba(0, 255, 136, 0.2);
+  color: #00ff88;
+}
+.prompt-btn.wrong-pick {
+  border-color: #ff0055;
+  background: rgba(255, 0, 85, 0.2);
+  color: #ff0055;
+}
+
+/* Firewall toggle task */
+.toggle-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 10px 14px;
+  border-radius: 10px;
+}
+.toggle-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+.toggle-switch {
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+.toggle-switch.on {
+  background: rgba(0, 255, 136, 0.2);
+  color: #00ff88;
+  border: 1px solid #00ff88;
+}
+.toggle-switch.off {
+  background: rgba(255, 0, 85, 0.2);
+  color: #ff0055;
+  border: 1px solid #ff0055;
+}
+
+/* Buffer timing task */
+.timing-track {
+  position: relative;
+  width: 100%;
+  height: 48px;
+  background: rgba(10, 18, 36, 0.95);
+  border: 2px solid rgba(0, 245, 255, 0.4);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.timing-target {
+  position: absolute;
+  left: 36%;
+  width: 28%;
+  height: 100%;
+  background: rgba(0, 255, 136, 0.25);
+  border-left: 2px dashed #00ff88;
+  border-right: 2px dashed #00ff88;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: bold;
+  color: #00ff88;
+}
+.timing-pointer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  background: #ff0055;
+  box-shadow: 0 0 12px #ff0055;
+  border-radius: 4px;
+  transform: translateX(-50%);
+}
+
+/* Hash match task */
+.hash-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.hash-btn {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(0, 245, 255, 0.3);
+  padding: 16px;
+  border-radius: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: bold;
+  color: #38bdf8;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.hash-btn:hover {
+  background: rgba(0, 245, 255, 0.15);
+  border-color: #00f5ff;
+}
+.hash-btn.matched {
+  background: rgba(0, 255, 136, 0.25);
+  border-color: #00ff88;
+  color: #00ff88;
+}
+.hash-btn.wrong-pick {
+  background: rgba(255, 0, 85, 0.25);
+  border-color: #ff0055;
+  color: #ff0055;
+}
+
+/* Breakers task */
+.breakers-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.breaker-switch {
+  background: rgba(15, 23, 42, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 18px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.breaker-light {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #334155;
+  transition: all 0.2s;
+}
+.breaker-lbl {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  color: #94a3b8;
+  font-weight: bold;
+}
+.breaker-switch.engaged {
+  border-color: #00f5ff;
+  background: rgba(0, 245, 255, 0.12);
+}
+.breaker-switch.engaged .breaker-light {
+  background: #00ff88;
+  box-shadow: 0 0 12px #00ff88;
+}
+.breaker-switch.engaged .breaker-lbl {
+  color: #00f5ff;
+}
+
+/* Feedback messages */
+.task-feedback {
+  min-height: 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+.feed-ok { color: #00ff88; }
+.feed-err { color: #ff0055; }
+

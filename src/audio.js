@@ -97,4 +97,9 @@ export const sfx = {
     tone(1320, 0.05, 0.08, "square", 0.12);
     tone(1760, 0.12, 0.14, "triangle", 0.14);
   },
+  alarm() {
+    tone(880, 0, 0.12, "sawtooth", 0.08);
+    tone(587, 0.14, 0.15, "sawtooth", 0.08);
+  },
 };
+
