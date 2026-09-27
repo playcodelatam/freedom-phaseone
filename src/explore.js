@@ -10,7 +10,7 @@ import { createControls, isTouchDevice } from "./controls.js";
 import { createFollowCamera, intentToWorld } from "./camera.js";
 import { createEmotes } from "./emotes.js";
 import { createInteractions } from "./interactions.js";
-import { toonMat, metalMat, techMat, roundedGeo, markBloom } from "./gfx.js";
+import { metalMat, roundedGeo, markBloom } from "./gfx.js";
 import { createPostFX } from "./postfx.js";
 import { sfx } from "./audio.js";
 import { createNet, MULTIPLAYER_AVAILABLE } from "./net.js";

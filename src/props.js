@@ -4,7 +4,7 @@
 // materials per type and scales counts down on low-end devices via `density`.
 
 import * as THREE from "three";
-import { toonMat, roundedGeo, markBloom } from "./gfx.js";
+import { toonMat, markBloom } from "./gfx.js";
 
 export function createProps(scene, world, density = 1) {
   const group = new THREE.Group();

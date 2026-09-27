@@ -8,11 +8,17 @@ import { createHud } from "./hud.js";
 import { createProgress } from "./progress.js";
 import { sfx, unlockAudio } from "./audio.js";
 
+// Neural Academy — Cybersecurity learning modules.
+// Each subject maps to a filtered question pool in questions.js
+// via getLearnQuestion(subject, level, rng).
+
 const SUBJECTS = [
-  { key: "letters", emoji: "🔤", name: "Letters", desc: "ABC & sounds" },
-  { key: "numbers", emoji: "🔢", name: "Numbers", desc: "Count & order" },
-  { key: "shapes", emoji: "🔷", name: "Shapes", desc: "Circle, star…" },
-  { key: "colors", emoji: "🎨", name: "Colors", desc: "Red, blue…" },
+  { key: "web",     emoji: "🌐", name: "Web Security",    desc: "SQLi · XSS · OWASP" },
+  { key: "network", emoji: "🔌", name: "Network & Recon", desc: "Ports · Nmap · Protocols" },
+  { key: "crypto",  emoji: "🔐", name: "Cryptography",    desc: "Hashes · TLS · Hex" },
+  { key: "linux",   emoji: "🐧", name: "Linux CLI",       desc: "Privesc · Shells · FS" },
+  { key: "binary",  emoji: "⚙️",  name: "Binary & Systems","desc": "BOF · ASLR · Registers" },
+  { key: "ai",      emoji: "🤖", name: "AI Red Team",     desc: "Prompt Injection · LLMs" },
 ];
 const ROUND = 8;
 
@@ -32,11 +38,11 @@ export function startLearn(onHome) {
     document.getElementById("hud")?.classList.add("hidden");
     root.innerHTML = `
       <div class="learn-wrap">
-        <h1 class="learn-title">📚 What shall we learn?</h1>
+        <h1 class="learn-title">🧠 Select Your Training Module</h1>
         <div class="learn-grid">
           ${SUBJECTS.map((s) => `<button class="learn-card" data-key="${s.key}"><span class="lc-emoji">${s.emoji}</span><span class="lc-name">${s.name}</span><span class="lc-desc">${s.desc}</span></button>`).join("")}
         </div>
-        <div class="learn-foot">Level <b>${progress.info().level}</b></div>
+        <div class="learn-foot">Clearance Level <b>${progress.info().level}</b></div>
       </div>`;
     root.querySelectorAll(".learn-card").forEach((b) => b.addEventListener("click", () => runSubject(b.dataset.key)));
   }
