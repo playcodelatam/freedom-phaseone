@@ -64,15 +64,24 @@ export function createNet() {
       if (payload) emit("msg", payload);
     });
 
-    await new Promise((resolve) => {
+    const subscribed = await new Promise((resolve) => {
+      const timer = setTimeout(() => resolve(false), 8000);
       channel.subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
-          await channel.track({ name: me.name, color: me.color, t: Date.now() });
-          resolve();
+          clearTimeout(timer);
+          try {
+            await channel.track({ name: me.name, color: me.color, t: Date.now() });
+          } catch {
+            /* ignore track error */
+          }
+          resolve(true);
+        } else if (status === "TIMED_OUT" || status === "CHANNEL_ERROR") {
+          clearTimeout(timer);
+          resolve(false);
         }
       });
     });
-    return true;
+    return subscribed;
   }
 
   let lastSent = 0;

@@ -19,8 +19,11 @@ export function addCoins(n) {
   return v;
 }
 export function spendCoins(n) {
-  if (getCoins() < n) return false;
-  try { localStorage.setItem(K_COINS, String(getCoins() - n)); } catch { /* ignore */ }
+  if (n <= 0) return false;
+  const current = getCoins();
+  if (current < n) return false;
+  const next = current - n;
+  try { localStorage.setItem(K_COINS, String(next)); } catch { /* ignore */ }
   return true;
 }
 

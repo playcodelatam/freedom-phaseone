@@ -979,6 +979,27 @@ export function startExplore(onEnter, opts = {}) {
     if (voice) voice.stop();
     if (net) net.leave();
     document.getElementById("explore-bar")?.classList.add("hidden");
+
+    // Dispose all scene geometries, materials, and textures
+    scene.traverse((obj) => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        if (Array.isArray(obj.material)) {
+          obj.material.forEach((m) => {
+            m.map?.dispose();
+            m.dispose();
+          });
+        } else {
+          obj.material.map?.dispose();
+          obj.material.dispose();
+        }
+      }
+    });
+    serverLedTex?.dispose();
+    sc1Tex?.dispose();
+    sc2Tex?.dispose();
+    agents.forEach((ag) => ag.faceTex?.dispose());
+
     renderer.dispose();
     if (renderer.domElement.parentElement) renderer.domElement.parentElement.removeChild(renderer.domElement);
   }

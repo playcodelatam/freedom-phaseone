@@ -30,6 +30,7 @@ import { startExplore } from "./explore.js";
 import { startCoinRush } from "./coinrush.js";
 import { startMaze } from "./maze.js";
 import { startCloset } from "./closet.js";
+import { createTerminal } from "./terminal.js";
 import * as profile from "./profile.js";
 
 const AVATAR_Y_OFFSET = 0.15; // lift the visual so feet rest on platform tops
@@ -42,6 +43,7 @@ const LOW = isTouchDevice() && window.devicePixelRatio >= 2;
 let current = null; // the mounted activity screen { destroy }
 let playerName = "Player";
 let music = null; // global background music singleton (survives mode changes)
+let terminal = null; // tactical CLI singleton
 
 initHub();
 boot();
@@ -51,6 +53,7 @@ async function boot() {
   unlockAudio();
   playerName = choice.name;
   setupMusic();
+  terminal = createTerminal();
   if (choice.mode === "multi") openActivity(() => startRoom(choice, { launchObby, launchExplore }));
   else openExplore();
 }
